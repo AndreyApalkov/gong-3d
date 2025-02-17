@@ -12,6 +12,8 @@ import {
   QueryFilterFlags,
   EventQueue,
 } from "@dimforge/rapier3d";
+import Time from "./Utils/Time";
+import Experience from "./Experience";
 
 interface BoxShape {
   type: "box";
@@ -59,10 +61,13 @@ export type PhysicalObjectParams = RigidBodyParams & ColliderParams;
 export default class PhysicalWorld {
   private _instance: World;
   private _eventQueue: EventQueue;
+  private time: Time;
 
   constructor() {
     this._instance = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
     this._eventQueue = new RAPIER.EventQueue(true);
+
+    this.time = new Experience().time;
   }
 
   get instance(): World {
@@ -124,6 +129,7 @@ export default class PhysicalWorld {
   }
 
   update() {
+    this.instance.timestep = (this.time.delta || 16) / 1000;
     this._instance.step(this._eventQueue);
   }
 
@@ -153,7 +159,7 @@ export default class PhysicalWorld {
 
     bodyDesc.setTranslation(x, y, z);
 
-    bodyDesc.setCcdEnabled(true); // TODO: can be disabled for slow objects
+    // bodyDesc.setCcdEnabled(true); // TODO: can be added for fast objects
 
     return bodyDesc;
   }

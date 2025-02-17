@@ -84,6 +84,9 @@ export default class Player {
     const delta = this.time.delta / 1000;
 
     if (controls.isLocked === true) {
+      if (this.body.rigidBody.isSleeping()) {
+        this.body.rigidBody.lockTranslations(false, true);
+      }
       this.velocity.z -= this.velocity.z * 10.0 * delta;
       this.velocity.x -= this.velocity.x * 10.0 * delta;
       // this.velocity.x =
@@ -174,11 +177,13 @@ export default class Player {
       shape: { type: "box", sizes: { x: 1, y: this.height, z: 1 } },
       density: 100,
       rigidBodyType: "dynamic",
-      position: { x: 10, y: this.height / 2, z: 5 },
+      position: { x: 10, y: 8, z: 5 },
       mesh,
     });
-    this.body.rigidBody.lockRotations(true, true);
     this.body.rigidBody.setTranslation(this.camera.instance.position, true);
+    this.body.rigidBody.setGravityScale(1.5, true);
+    this.body.rigidBody.lockRotations(true, true);
+    this.body.rigidBody.lockTranslations(true, true);
   }
 
   private addHummer(): void {

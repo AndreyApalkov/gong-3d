@@ -60,7 +60,6 @@ export default class Gong extends Entity {
       "textures/gong-plate-7/roughness.jpg",
       "textures/gong-plate-7/ambientOcclusion.jpg",
     ]);
-
     this.baulkColorTexture = baulkColorTexture;
     this.baulkNormalTexture = baulkNormalTexture;
     this.plateColorTexture = plateColorTexture;
@@ -132,6 +131,7 @@ export default class Gong extends Entity {
           normalMap: this.baulkNormalTexture,
         }),
       );
+      mesh.castShadow = true;
       const column = new PhysicalEntity({
         shape: { type: "cylinder", radius: 0.2, height: 10 },
         rigidBodyType: "fixed",
@@ -146,7 +146,7 @@ export default class Gong extends Entity {
 
   private createPlate(): void {
     const mesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(0, 3, 0.2, 64, 128, true),
+      new THREE.CylinderGeometry(0, 3, 0.2, 32, 8, true),
       new THREE.MeshStandardMaterial({
         map: this.plateColorTexture,
         normalMap: this.plateNormalTexture,
@@ -158,6 +158,7 @@ export default class Gong extends Entity {
         side: THREE.DoubleSide,
       }),
     );
+    mesh.castShadow = true;
     const plate = new PhysicalEntity({
       shape: { type: "cylinder", radius: 3, height: 0.2 },
       density: 1,

@@ -23,7 +23,6 @@ export default class SceneObject {
   }
 
   private setMesh() {
-    this._mesh.castShadow = true;
     this.scene.add(this._mesh);
   }
 }

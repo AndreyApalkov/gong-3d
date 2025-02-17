@@ -54,7 +54,7 @@ export default class Environment {
     this.sunLight.shadow.camera.bottom = -20;
     this.sunLight.shadow.camera.near = 1;
     this.sunLight.shadow.camera.far = 200;
-    // this.sunLight.shadow.mapSize.set(1024, 1024);
+    this.sunLight.shadow.mapSize.set(256, 256);
     this.sunLight.shadow.normalBias = 0.08;
     // this.sunLight.position.set(3.5, 2, -1.25).multiplyScalar(100);
     // this.sunLight.shadow.camera.position.set(3.5, 2, -1.25).multiplyScalar(100);
@@ -127,17 +127,14 @@ export default class Environment {
   update() {
     this.phi -= this.time.delta * Math.PI * 0.0000005;
     const sunCosine = Math.cos(this.phi);
-
     const sunPosition = new THREE.Vector3().setFromSphericalCoords(
       1,
       this.phi,
       this.theta,
     );
     this.sunLight.position.copy(sunPosition.clone().multiplyScalar(50));
-
     const sunLightIntensity = THREE.MathUtils.smoothstep(sunCosine, -0.2, 0.1);
     const skyOpacity = THREE.MathUtils.smoothstep(sunCosine, -0.5, 0.2);
-
     this.sunLight.intensity = 4 * sunLightIntensity;
     this.sky.material.uniforms.sunPosition.value = sunPosition;
     this.sky.material.uniforms.uOpacity.value = skyOpacity;

@@ -5,22 +5,18 @@ export enum SizesEvent {
 }
 
 export default class Sizes {
-  private _width: number;
-  private _height: number;
-  private _pixelRatio: number;
+  private _width!: number;
+  private _height!: number;
+  private _pixelRatio!: number;
   private readonly eventsManager: EventsManager = eventsManager;
 
   constructor() {
     // Setup
-    this._width = window.innerWidth;
-    this._height = window.innerHeight;
-    this._pixelRatio = Math.min(window.devicePixelRatio, 2);
+    this.setSizes();
 
     // Resize event
     window.addEventListener("resize", () => {
-      this._width = window.innerWidth;
-      this._height = window.innerHeight;
-      this._pixelRatio = Math.min(window.devicePixelRatio, 2);
+      this.setSizes();
 
       this.eventsManager.emit(SizesEvent.Resize);
     });
@@ -36,5 +32,12 @@ export default class Sizes {
 
   get pixelRatio(): number {
     return this._pixelRatio;
+  }
+
+  private setSizes(): void {
+    this._width = window.innerWidth;
+    this._height = window.innerHeight;
+    // this._pixelRatio = Math.min(window.devicePixelRatio, 2);
+    this._pixelRatio = 1;
   }
 }

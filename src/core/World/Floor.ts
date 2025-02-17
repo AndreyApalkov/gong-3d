@@ -49,7 +49,6 @@ export default class Floor {
         "textures/floor/color.jpg",
         "textures/floor/normal.jpg",
       ]);
-
     this.grassColorTexture = grassColorTexture;
     this.grassNormalTexture = grassNormalTexture;
   }
@@ -84,7 +83,6 @@ export default class Floor {
     this.mesh = new THREE.Mesh(this.geometry, this.material);
     this.mesh.rotation.x = -Math.PI * 0.5;
     this.mesh.receiveShadow = true;
-    this.mesh.castShadow = true;
     this.scene.add(this.mesh);
   }
 }
