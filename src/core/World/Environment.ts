@@ -68,25 +68,30 @@ export default class Environment {
   private setDebug(): void {
     this.debugFolder = this.debug.ui?.addFolder("environment");
 
-    this.debugFolder
-      ?.add(this.sunLight, "intensity")
-      .min(0)
-      .max(10)
-      .step(0.001)
-      .name("sunLightIntensity");
+    // this.debugFolder
+    //   ?.add(this.sunLight, "intensity")
+    //   .min(0)
+    //   .max(10)
+    //   .step(0.001)
+    //   .name("sunLightIntensity");
     this.debugFolder
       ?.add(this, "phi")
       .min(0)
       .max(Math.PI * 2)
       .step(0.001)
-      .name("phi");
+      .name("sun phi");
     this.debugFolder
       ?.add(this, "theta")
       .min(0)
       .max(Math.PI * 2)
       .step(0.001)
-      .name("theta");
-    this.debugFolder?.add(this, "timeScale").min(0).max(10000).step(1);
+      .name("sun theta");
+    this.debugFolder
+      ?.add(this, "timeScale")
+      .min(0)
+      .max(10000)
+      .step(1)
+      .name("time scale");
   }
 
   private setSky(): void {
