@@ -16,6 +16,7 @@ export default class Gong extends Entity {
   private plateAmbientOcclusionTexture?: THREE.Texture;
   private plateMetallicTexture?: THREE.Texture;
   private plateRoughnessTexture?: THREE.Texture;
+  private logoTexture?: THREE.Texture;
   private physicalWorld: PhysicalWorld;
   private gongPlate?: PhysicalEntity;
 
@@ -51,6 +52,7 @@ export default class Gong extends Entity {
       plateMetallicTexture,
       plateRoughnessTexture,
       plateAmbientOcclusionTexture,
+      logoTexture,
     ] = await this.resources.loadTextures([
       "textures/baulk/color.jpg",
       "textures/baulk/normal.jpg",
@@ -59,6 +61,7 @@ export default class Gong extends Entity {
       "textures/gong-plate-7/metallic.jpg",
       "textures/gong-plate-7/roughness.jpg",
       "textures/gong-plate-7/ambientOcclusion.jpg",
+      "textures/logo/casechek-logo.png",
     ]);
     this.baulkColorTexture = baulkColorTexture;
     this.baulkNormalTexture = baulkNormalTexture;
@@ -67,6 +70,7 @@ export default class Gong extends Entity {
     this.plateMetallicTexture = plateMetallicTexture;
     this.plateRoughnessTexture = plateRoughnessTexture;
     this.plateAmbientOcclusionTexture = plateAmbientOcclusionTexture;
+    this.logoTexture = logoTexture;
   }
 
   private init(): void {
@@ -159,6 +163,8 @@ export default class Gong extends Entity {
       }),
     );
     mesh.castShadow = true;
+    const logo = this.createLogo();
+    mesh.add(logo);
     const plate = new PhysicalEntity({
       shape: { type: "cylinder", radius: 3, height: 0.2 },
       density: 1,
@@ -189,6 +195,24 @@ export default class Gong extends Entity {
     this.gongPlate = plate;
 
     this.children.push(this.gongPlate);
+  }
+
+  private createLogo(): THREE.Mesh {
+    const logoAspect =
+      this.logoTexture?.image.width / this.logoTexture?.image.height;
+    const width = 4;
+    const height = width / logoAspect;
+
+    const logoMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(width, height),
+      new THREE.MeshStandardMaterial({
+        map: this.logoTexture,
+        transparent: true,
+      }),
+    );
+    logoMesh.rotateX(-Math.PI / 2);
+    logoMesh.position.set(0, 0.1, 0);
+    return logoMesh;
   }
 
   private playSound(force: number): void {
