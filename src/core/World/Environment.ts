@@ -19,6 +19,7 @@ export default class Environment {
   private sky!: Sky;
   private phi = THREE.MathUtils.degToRad(80);
   private theta = THREE.MathUtils.degToRad(50);
+  private timeScale = 1;
 
   constructor() {
     this.experience = new Experience();
@@ -74,23 +75,18 @@ export default class Environment {
       .step(0.001)
       .name("sunLightIntensity");
     this.debugFolder
-      ?.add(this.sunLight.position, "y")
-      .min(-5)
-      .max(5)
+      ?.add(this, "phi")
+      .min(0)
+      .max(Math.PI * 2)
       .step(0.001)
-      .name("sunLightY");
+      .name("phi");
     this.debugFolder
-      ?.add(this.sunLight.position, "z")
-      .min(-5)
-      .max(5)
+      ?.add(this, "theta")
+      .min(0)
+      .max(Math.PI * 2)
       .step(0.001)
-      .name("sunLightZ");
-    this.debugFolder
-      ?.add(this.sunLight.position, "x")
-      .min(-5)
-      .max(5)
-      .step(0.001)
-      .name("sunLightX");
+      .name("theta");
+    this.debugFolder?.add(this, "timeScale").min(0).max(10000).step(1);
   }
 
   private setSky(): void {
@@ -125,7 +121,8 @@ export default class Environment {
   }
 
   update() {
-    this.phi -= this.time.delta * Math.PI * 0.0000005;
+    this.phi -=
+      (this.time.delta * Math.PI * 2 * this.timeScale) / (86400 * 1000);
     const sunCosine = Math.cos(this.phi);
     const sunPosition = new THREE.Vector3().setFromSphericalCoords(
       1,

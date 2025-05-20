@@ -5,7 +5,8 @@ export default class Debug {
   private readonly _ui?: dat.GUI;
 
   constructor() {
-    this._active = window.location.hash === "#debug";
+    // this._active = window.location.hash === "#debug";
+    this._active = true;
 
     if (this._active) {
       this._ui = new dat.GUI();
