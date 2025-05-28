@@ -21,6 +21,7 @@ export default class Gong extends Entity {
   private logoTexture?: THREE.Texture;
   private physicalWorld: PhysicalWorld;
   private gongPlate?: PhysicalEntity;
+  private hitSound: HTMLAudioElement = new Audio("sound/gong-sound.mp3");
 
   constructor() {
     super();
@@ -223,8 +224,8 @@ export default class Gong extends Entity {
 
   private playSound(force: number): void {
     const volume = Math.min(force / 1000, 1);
-    const audio = new Audio("sound/gong-sound.mp3");
-    audio.volume = volume;
-    audio.play();
+    this.hitSound.currentTime = 0;
+    this.hitSound.volume = volume;
+    this.hitSound.play();
   }
 }
