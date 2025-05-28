@@ -76,6 +76,7 @@ export default class Floor {
     this.material = new THREE.MeshStandardMaterial({
       map: this.grassColorTexture,
       normalMap: this.grassNormalTexture,
+      side: THREE.DoubleSide,
     });
   }
 

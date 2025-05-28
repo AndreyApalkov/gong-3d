@@ -55,5 +55,6 @@ export default class Camera {
 
   private setControls(): void {
     this._controls = new PointerLockControls(this.instance, this.canvas);
+    this._controls.maxPolarAngle = 2.3;
   }
 }

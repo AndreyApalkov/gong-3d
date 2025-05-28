@@ -39,6 +39,7 @@ interface ColliderParams {
   shape: BoxShape | SphereShape | CylinderShape;
   density?: number;
   restitution?: number;
+  collisionGroups?: number;
 }
 
 type RigidBodyType =
@@ -49,6 +50,7 @@ type RigidBodyType =
 
 interface RigidBodyParams {
   rigidBodyType: RigidBodyType;
+  damping?: number;
   position?: {
     x: number;
     y: number;
@@ -134,7 +136,7 @@ export default class PhysicalWorld {
   }
 
   private createRigidBodyDesc(params: RigidBodyParams): RigidBodyDesc {
-    const { position, rigidBodyType } = params;
+    const { position, rigidBodyType, damping } = params;
     const { x, y, z } = position ?? { x: 0, y: 0, z: 0 };
 
     let bodyDesc: RigidBodyDesc;
@@ -159,13 +161,17 @@ export default class PhysicalWorld {
 
     bodyDesc.setTranslation(x, y, z);
 
+    if (damping) {
+      bodyDesc.setLinearDamping(damping);
+    }
+
     // bodyDesc.setCcdEnabled(true); // TODO: can be added for fast objects
 
     return bodyDesc;
   }
 
   private createColliderDesc(params: ColliderParams): ColliderDesc {
-    const { shape, density, restitution } = params;
+    const { shape, density, restitution, collisionGroups } = params;
     let colliderDesc: ColliderDesc;
 
     switch (shape.type) {
@@ -191,6 +197,9 @@ export default class PhysicalWorld {
     }
     if (restitution) {
       colliderDesc.setRestitution(restitution);
+    }
+    if (collisionGroups) {
+      colliderDesc.setCollisionGroups(collisionGroups);
     }
 
     return colliderDesc;
