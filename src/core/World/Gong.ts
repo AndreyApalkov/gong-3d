@@ -4,6 +4,8 @@ import PhysicalEntity from "../models/PhysicalEntity";
 import Resources from "../Utils/Resources";
 import Experience from "../Experience";
 import PhysicalWorld from "../PhysicalWorld";
+import type { RevoluteImpulseJoint } from "@dimforge/rapier3d";
+import { InteractionGroups } from "../constants/InteractionGroups";
 import RAPIER from "@dimforge/rapier3d";
 
 export default class Gong extends Entity {
@@ -19,6 +21,7 @@ export default class Gong extends Entity {
   private logoTexture?: THREE.Texture;
   private physicalWorld: PhysicalWorld;
   private gongPlate?: PhysicalEntity;
+  private hitSound: HTMLAudioElement = new Audio("sound/gong-sound.mp3");
 
   constructor() {
     super();
@@ -172,6 +175,8 @@ export default class Gong extends Entity {
       position: { x: 0, y: 4.7, z: 0 },
       mesh,
       rotation: { x: 1, y: 0, z: 0, w: Math.PI / 2 },
+      collisionGroups: InteractionGroups.DYNAMIC_OBJECT,
+      damping: 0.2,
     });
     plate.collider.setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS);
 
@@ -184,12 +189,14 @@ export default class Gong extends Entity {
         x,
       );
 
-      this.physicalWorld.instance.createImpulseJoint(
+      const joint = this.physicalWorld.instance.createImpulseJoint(
         jointParams,
         plate.rigidBody,
         baulkRigidBody,
         true,
-      );
+      ) as RevoluteImpulseJoint;
+
+      joint.setLimits(-Math.PI + 0.1, Math.PI - 0.1);
     }
 
     this.gongPlate = plate;
@@ -217,8 +224,8 @@ export default class Gong extends Entity {
 
   private playSound(force: number): void {
     const volume = Math.min(force / 1000, 1);
-    const audio = new Audio("sound/gong-sound.mp3");
-    audio.volume = volume;
-    audio.play();
+    this.hitSound.currentTime = 0;
+    this.hitSound.volume = volume;
+    this.hitSound.play();
   }
 }

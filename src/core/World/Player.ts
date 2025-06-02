@@ -7,18 +7,23 @@ import PhysicalWorld from "../PhysicalWorld";
 import PhysicalEntity from "../models/PhysicalEntity";
 import { KinematicCharacterController } from "@dimforge/rapier3d";
 import Hammer from "./Hammer";
+import Arms from "./Arms";
+import { InteractionGroups } from "../constants/InteractionGroups";
+import { Weapon } from "../models/Weapon";
+import { LoadWatcher } from "../Utils/LoadWatcher";
 
 export default class Player {
+  private readonly time: Time;
+  private readonly camera: Camera;
+  private readonly world: World;
+  private readonly physicalWorld: PhysicalWorld;
+  private characterController!: KinematicCharacterController;
   private readonly minSpeed = 0.3;
   private readonly maxSpeed = 2;
   private _speed: number;
-  private time: Time;
-  private camera: Camera;
-  private world: World;
-  private physicalWorld: PhysicalWorld;
-  private characterController!: KinematicCharacterController;
   private body!: PhysicalEntity;
-  private hammer!: Hammer;
+  private arms!: Arms;
+  private hammer!: Weapon;
   private _moveForward = false;
   private _moveLeft = false;
   private _moveBackward = false;
@@ -37,8 +42,13 @@ export default class Player {
     this._speed = this.minSpeed;
 
     this.setPhysicalBody();
-    this.addHummer();
     this.setCharacterController();
+
+    this.arms = new Arms(this.body);
+    this.hammer = new Hammer();
+    new LoadWatcher([this.arms, this.hammer], () => {
+      this.arms.setWeapon(this.hammer);
+    });
   }
 
   set moveForward(value: boolean) {
@@ -76,83 +86,83 @@ export default class Player {
   }
 
   hit(): void {
-    this.hammer.hit();
+    this.arms.hit();
   }
 
   update() {
-    const controls = this.camera.controls;
     const delta = this.time.delta / 1000;
 
-    if (controls.isLocked === true) {
-      if (this.body.rigidBody.isSleeping()) {
-        this.body.rigidBody.lockTranslations(false, true);
-      }
-      this.velocity.z -= this.velocity.z * 10.0 * delta;
-      this.velocity.x -= this.velocity.x * 10.0 * delta;
-      // this.velocity.x =
-      //   Math.abs(this.velocity.x) < 0.000001 ? 0 : this.velocity.x;
-      // this.velocity.z =
-      //   Math.abs(this.velocity.z) < 0.000001 ? 0 : this.velocity.z;
-
-      const direction = new THREE.Vector3();
-
-      direction.z = Number(this._moveBackward) - Number(this._moveForward);
-      direction.x = Number(this._moveRight) - Number(this._moveLeft);
-      direction.normalize(); // this ensures consistent movements in all directions
-
-      if (this._moveForward || this._moveBackward) {
-        this.velocity.z += direction.z * 2 * delta * this._speed;
-      }
-
-      if (this._moveLeft || this._moveRight) {
-        this.velocity.x += direction.x * 2 * delta * this._speed;
-      }
-
-      const movement = this.velocity
-        .clone()
-        .normalize()
-        .applyQuaternion(this.camera.instance.quaternion)
-        .multiplyScalar(this.velocity.length());
-
-      this.characterController.computeColliderMovement(
-        this.body.collider,
-        { x: movement.x, y: 0, z: movement.z }, // The collider we would like to move.
-      );
-
-      // Read the result.
-      let correctedMovement = this.characterController.computedMovement();
-
-      const prevPosition = new THREE.Vector3().copy(
-        this.body.rigidBody.translation(),
-      );
-
-      const newPosition = prevPosition.add(correctedMovement);
-
-      this.body.rigidBody.setTranslation(
-        {
-          x: newPosition.x,
-          y: newPosition.y,
-          z: newPosition.z,
-        },
-        true,
-      );
-
-      const cameraDir = this.camera.instance.quaternion;
-      this.body.rigidBody.setRotation(
-        { x: 0, y: cameraDir.y, z: cameraDir.z, w: cameraDir.w },
-        true,
-      );
-      this.camera.controls.object.position.set(
-        newPosition.x,
-        newPosition.y + 1,
-        newPosition.z,
-      );
-
-      this.detectGround();
-
-      this.body.update();
-      this.hammer.update();
+    if (this.body.rigidBody.isSleeping()) {
+      this.body.rigidBody.lockTranslations(false, true);
     }
+    this.velocity.z -= this.velocity.z * 10.0 * delta;
+    this.velocity.x -= this.velocity.x * 10.0 * delta;
+    // this.velocity.x =
+    //   Math.abs(this.velocity.x) < 0.000001 ? 0 : this.velocity.x;
+    // this.velocity.z =
+    //   Math.abs(this.velocity.z) < 0.000001 ? 0 : this.velocity.z;
+
+    const direction = new THREE.Vector3();
+
+    direction.z = Number(this._moveBackward) - Number(this._moveForward);
+    direction.x = Number(this._moveRight) - Number(this._moveLeft);
+    direction.normalize(); // this ensures consistent movements in all directions
+
+    if (this._moveForward || this._moveBackward) {
+      this.velocity.z += direction.z * 2 * delta * this._speed;
+    }
+
+    if (this._moveLeft || this._moveRight) {
+      this.velocity.x += direction.x * 2 * delta * this._speed;
+    }
+
+    const movement = this.velocity
+      .clone()
+      .normalize()
+      .applyQuaternion(this.camera.instance.quaternion)
+      .multiplyScalar(this.velocity.length());
+
+    this.characterController.computeColliderMovement(
+      this.body.collider,
+      { x: movement.x, y: 0, z: movement.z }, // The collider we would like to move.
+      undefined,
+      this.body.collider.collisionGroups(),
+    );
+
+    // Read the result.
+    let correctedMovement = this.characterController.computedMovement();
+
+    const prevPosition = new THREE.Vector3().copy(
+      this.body.rigidBody.translation(),
+    );
+
+    const newPosition = prevPosition.add(correctedMovement);
+
+    this.body.rigidBody.setTranslation(
+      {
+        x: newPosition.x,
+        y: newPosition.y,
+        z: newPosition.z,
+      },
+      true,
+    );
+
+    const cameraDir = this.camera.instance.quaternion;
+    this.body.rigidBody.setRotation(
+      { x: 0, y: cameraDir.y, z: cameraDir.z, w: cameraDir.w },
+      true,
+    );
+    this.camera.controls.object.position.set(
+      newPosition.x,
+      newPosition.y + 1,
+      newPosition.z,
+    );
+
+    this.detectGround();
+
+    this.body.update();
+    this.arms.update();
+    this.hammer.update();
   }
 
   private setCharacterController(): void {
@@ -177,17 +187,14 @@ export default class Player {
       shape: { type: "box", sizes: { x: 1, y: this.height, z: 1 } },
       density: 100,
       rigidBodyType: "dynamic",
-      position: { x: 10, y: 8, z: 5 },
+      collisionGroups: InteractionGroups.PLAYER,
+      position: { x: 10, y: this.height / 2, z: 5 },
       mesh,
     });
     this.body.rigidBody.setTranslation(this.camera.instance.position, true);
     this.body.rigidBody.setGravityScale(1.5, true);
     this.body.rigidBody.lockRotations(true, true);
     this.body.rigidBody.lockTranslations(true, true);
-  }
-
-  private addHummer(): void {
-    this.hammer = new Hammer(this.body);
   }
 
   private detectGround(): void {
