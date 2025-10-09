@@ -206,7 +206,7 @@ export default class Arms extends Watchable {
   }
 
   private setDebug(): void {
-    this.debugFolder = this.debug.ui?.addFolder("hammer");
+    this.debugFolder = this.debug.ui?.addFolder("mallet");
 
     this.debugFolder
       ?.add(this, "throwingSpeed")

@@ -9,7 +9,7 @@ import { InteractionGroups } from "../constants/InteractionGroups";
 import { Weapon } from "../models/Weapon";
 import { Watchable } from "../Utils/LoadWatcher";
 
-export default class Hammer extends Watchable implements Weapon {
+export default class Mallet extends Watchable implements Weapon {
   private resources: Resources;
   private physicalWorld: PhysicalWorld;
   private readonly scene: THREE.Scene;
@@ -91,10 +91,10 @@ export default class Hammer extends Watchable implements Weapon {
   }
 
   private async loadModel(): Promise<void> {
-    const model = await this.resources.loadModel("models/hammer.glb");
+    const model = await this.resources.loadModel("models/mallet.glb");
     this._mesh = model?.scene.clone();
     if (!this._mesh) {
-      console.error("Hammer: model mesh is undefined");
+      console.error("Mallet: model mesh is undefined");
       return;
     }
     this._mesh.position.set(this.x, this.y, this.z);

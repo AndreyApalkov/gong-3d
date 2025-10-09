@@ -6,7 +6,7 @@ import World from "./World";
 import PhysicalWorld from "../PhysicalWorld";
 import PhysicalEntity from "../models/PhysicalEntity";
 import { KinematicCharacterController } from "@dimforge/rapier3d";
-import Hammer from "./Hammer";
+import Mallet from "./Mallet";
 import Arms from "./Arms";
 import { InteractionGroups } from "../constants/InteractionGroups";
 import { Weapon } from "../models/Weapon";
@@ -23,7 +23,7 @@ export default class Player {
   private _speed: number;
   public body!: PhysicalEntity;
   private arms!: Arms;
-  public hammer!: Weapon;
+  public mallet!: Weapon;
   private _moveForward = false;
   private _moveLeft = false;
   private _moveBackward = false;
@@ -53,10 +53,10 @@ export default class Player {
   }
 
   setWeapon(): void {
-    this.hammer = new Hammer();
-    this.world.addObject(this.hammer);
-    new LoadWatcher([this.hammer], () => {
-      this.arms.setWeapon(this.hammer);
+    this.mallet = new Mallet();
+    this.world.addObject(this.mallet);
+    new LoadWatcher([this.mallet], () => {
+      this.arms.setWeapon(this.mallet);
     });
   }
 
