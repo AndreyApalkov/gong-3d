@@ -4,23 +4,20 @@ export enum TimeEvent {
   Tick = "time:tick",
 }
 
+const FIXED_TIMESTEP = 1 / 60;
+const MAX_UPDATES_PER_FRAME = 5;
+
 export default class Time {
-  private start: number;
-  private current: number;
-  private _elapsed: number;
-  private _delta: number;
   private readonly eventsManager: EventsManager = eventsManager;
+  private _elapsed: number; // time in milliseconds elapsed since the start of the game
+  private _timeBuffer = 0; // in seconds
 
   constructor() {
-    // Setup
-    this.start = Date.now();
-    this.current = this.start;
-    this._elapsed = 0;
-    this._delta = 16;
+    this._elapsed = performance.now();
 
-    window.requestAnimationFrame(() => {
-      this.tick();
-    });
+    this.tick = this.tick.bind(this);
+
+    window.requestAnimationFrame(this.tick);
   }
 
   get elapsed(): number {
@@ -28,19 +25,42 @@ export default class Time {
   }
 
   get delta(): number {
-    return this._delta;
+    return FIXED_TIMESTEP;
   }
 
-  private tick(): void {
-    const currentTime = Date.now();
-    this._delta = currentTime - this.current;
-    this.current = currentTime;
-    this._elapsed = this.current - this.start;
+  private tick(now: number): void {
+    let delta = (now - this._elapsed) / 1000;
+    this._elapsed = now;
 
-    this.eventsManager.emit(TimeEvent.Tick);
+    // Limiting too large time delta (lag protection). It works like a game pause
+    if (delta > 0.25) {
+      console.warn("to big delta", delta);
+      delta = 0.25;
+    }
 
-    window.requestAnimationFrame(() => {
-      this.tick();
-    });
+    this._timeBuffer += delta;
+
+    if (this._timeBuffer < FIXED_TIMESTEP) {
+      window.requestAnimationFrame(this.tick);
+      return;
+    }
+
+    let updates = 0; // updates on current frame
+
+    while (this._timeBuffer >= FIXED_TIMESTEP) {
+      this.eventsManager.emit(TimeEvent.Tick);
+      this._timeBuffer -= FIXED_TIMESTEP;
+      updates++;
+
+      if (updates > MAX_UPDATES_PER_FRAME) {
+        console.error(
+          "Update loop can't keep up! Max updates per frame: ",
+          MAX_UPDATES_PER_FRAME,
+        );
+        break;
+      }
+    }
+
+    window.requestAnimationFrame(this.tick);
   }
 }

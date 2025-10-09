@@ -169,7 +169,12 @@ export default class Gong extends Entity {
     const logo = this.createLogo();
     mesh.add(logo);
     const plate = new PhysicalEntity({
-      shape: { type: "cylinder", radius: 3, height: 0.2 },
+      shape: {
+        type: "trimesh",
+        vertices: mesh.geometry.attributes.position.array as Float32Array,
+        indices:
+          (mesh.geometry.index?.array as Uint32Array) || new Uint32Array(),
+      },
       density: 1,
       rigidBodyType: "dynamic",
       position: { x: 0, y: 4.7, z: 0 },

@@ -126,8 +126,7 @@ export default class Environment {
   }
 
   update() {
-    this.phi -=
-      (this.time.delta * Math.PI * 2 * this.timeScale) / (86400 * 1000);
+    this.phi -= (this.time.delta * Math.PI * 2 * this.timeScale) / 86400;
     const sunCosine = Math.cos(this.phi);
     const sunPosition = new THREE.Vector3().setFromSphericalCoords(
       1,

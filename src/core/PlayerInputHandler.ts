@@ -45,6 +45,10 @@ export default class PlayerInputHandler {
 
       case "ShiftLeft":
         this.player.accelerate(isKeyDown);
+        break;
+
+      case "KeyQ":
+        isKeyDown && this.player.throwObject();
     }
   }
 

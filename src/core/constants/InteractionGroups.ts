@@ -16,17 +16,7 @@ export class InteractionGroups {
 
   static readonly PLAYER_WEAPON = this.createMask(
     CollisionGroups.WEAPON,
-    CollisionGroups.ENEMY | CollisionGroups.DYNAMIC_OBJECT,
-  );
-
-  static readonly ENEMY = this.createMask(
-    CollisionGroups.ENEMY,
-    CollisionGroups.GROUND |
-      CollisionGroups.WALL |
-      CollisionGroups.ENEMY |
-      CollisionGroups.PLAYER |
-      CollisionGroups.WEAPON |
-      CollisionGroups.DYNAMIC_OBJECT,
+    CollisionGroups.DYNAMIC_OBJECT,
   );
 
   static readonly DYNAMIC_OBJECT = this.createMask(
