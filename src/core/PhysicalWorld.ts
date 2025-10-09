@@ -35,8 +35,20 @@ interface SphereShape {
   radius: number;
 }
 
+interface TrimeshShape {
+  type: "trimesh";
+  vertices: Float32Array;
+  indices: Uint32Array;
+}
+
+interface ConeShape {
+  type: "cone";
+  radius: number;
+  height: number;
+}
+
 interface ColliderParams {
-  shape: BoxShape | SphereShape | CylinderShape;
+  shape: BoxShape | SphereShape | CylinderShape | TrimeshShape | ConeShape;
   density?: number;
   restitution?: number;
   collisionGroups?: number;
@@ -193,6 +205,15 @@ export default class PhysicalWorld {
           shape.height / 2,
           shape.radius,
         );
+        break;
+      case "trimesh":
+        colliderDesc = RAPIER.ColliderDesc.trimesh(
+          shape.vertices,
+          shape.indices,
+        );
+        break;
+      case "cone":
+        colliderDesc = RAPIER.ColliderDesc.cone(shape.height / 2, shape.radius);
         break;
     }
 
