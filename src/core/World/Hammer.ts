@@ -15,9 +15,9 @@ export default class Hammer extends Watchable implements Weapon {
   private readonly scene: THREE.Scene;
   private _mesh?: Object3D;
   private rigidBody?: RigidBody;
-  private readonly x: number = -0.5;
-  private readonly y: number = 0.6;
-  private readonly z: number = 1.7;
+  private readonly x: number = -0.3;
+  private readonly y: number = 0.35;
+  private readonly z: number = 0.7;
   private hasOwner: boolean = false;
 
   constructor() {
@@ -37,12 +37,16 @@ export default class Hammer extends Watchable implements Weapon {
     this.hasOwner = false;
     this.scene.add(this.mesh!);
     this.rigidBody?.setBodyType(RigidBodyType.Dynamic, true);
-    direction.multiplyScalar(100);
+    direction.multiplyScalar(70);
 
     this.rigidBody?.setLinvel(
       { x: direction.x, y: direction.y, z: direction.z },
       true,
     );
+    setTimeout(() => {
+      const collider = this.rigidBody?.collider(0);
+      collider?.setCollisionGroups(InteractionGroups.DYNAMIC_OBJECT);
+    }, 200);
   }
 
   update(): void {
@@ -72,8 +76,8 @@ export default class Hammer extends Watchable implements Weapon {
   }
 
   private setPhysicalObject(): void {
-    const { rigidBody } = this.physicalWorld.createObject({
-      shape: { type: "cylinder", radius: 0.1, height: 3 },
+    const { rigidBody, collider } = this.physicalWorld.createObject({
+      shape: { type: "cone", radius: 0.3, height: 2.42 },
       density: 3,
       restitution: 0.3,
       rigidBodyType: "kinematicPositionBased",
@@ -81,6 +85,9 @@ export default class Hammer extends Watchable implements Weapon {
       collisionGroups: InteractionGroups.PLAYER_WEAPON,
     });
 
+    const euler = new THREE.Euler(0, 0, Math.PI);
+    const rotation = new Quaternion().setFromEuler(euler);
+    collider.setRotationWrtParent(rotation);
     this.rigidBody = rigidBody;
   }
 
@@ -91,7 +98,6 @@ export default class Hammer extends Watchable implements Weapon {
       console.error("Hammer: model mesh is undefined");
       return;
     }
-    this._mesh.scale.setScalar(0.3);
     this._mesh.position.set(this.x, this.y, this.z);
     this._mesh.rotation.set(1.1, 1, 0.4);
     this.dispatchEvent({ type: "loaded" });
