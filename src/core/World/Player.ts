@@ -21,9 +21,9 @@ export default class Player {
   private readonly minSpeed = 0.3;
   private readonly maxSpeed = 2;
   private _speed: number;
-  public body!: PhysicalEntity;
+  private body!: PhysicalEntity;
   private arms!: Arms;
-  public mallet!: Weapon;
+  private mallet!: Weapon;
   private _moveForward = false;
   private _moveLeft = false;
   private _moveBackward = false;
