@@ -11,7 +11,8 @@ export type ArmsAnimationKey =
   | "Attack_03"
   | "Attack_04"
   | "Draw_sword"
-  | "Unequip_Sword";
+  | "Unequip_Sword"
+  | "Throw";
 
 interface ArmsAnimationData extends AnimationData<ArmsAnimationKey> {
   type: "attack" | "idle" | "movement";
@@ -60,6 +61,12 @@ export class PlayerAnimations {
     repetitions: 1,
     timeScale: 1,
   };
+  static readonly Throw: ArmsAnimationData = {
+    type: "movement",
+    actionName: "Throw",
+    repetitions: 1,
+    timeScale: 1,
+  };
 
   static readonly ALL: Record<ArmsAnimationKey, ArmsAnimationData> = {
     Idle: PlayerAnimations.Idle,
@@ -69,6 +76,7 @@ export class PlayerAnimations {
     Attack_04: PlayerAnimations.Attack_04,
     Draw_sword: PlayerAnimations.Draw_sword,
     Unequip_Sword: PlayerAnimations.Unequip_Sword,
+    Throw: PlayerAnimations.Throw,
   };
 
   static get ATTACKS(): ArmsAnimationData[] {

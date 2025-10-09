@@ -1,8 +1,9 @@
+const { RigidBodyType } = await import("@dimforge/rapier3d");
+import * as THREE from "three";
 import Experience from "../Experience";
 import PhysicalWorld from "../PhysicalWorld";
-import type { RigidBody } from "@dimforge/rapier3d";
+import { type RigidBody } from "@dimforge/rapier3d";
 import Resources from "../Utils/Resources";
-import { GLTF } from "three/examples/jsm/Addons.js";
 import { Object3D, Quaternion, Vector3 } from "three";
 import { InteractionGroups } from "../constants/InteractionGroups";
 import { Weapon } from "../models/Weapon";
@@ -11,43 +12,72 @@ import { Watchable } from "../Utils/LoadWatcher";
 export default class Hammer extends Watchable implements Weapon {
   private resources: Resources;
   private physicalWorld: PhysicalWorld;
-  private model?: GLTF;
+  private readonly scene: THREE.Scene;
+  private _mesh?: Object3D;
   private rigidBody?: RigidBody;
   private readonly x: number = -0.5;
   private readonly y: number = 0.6;
   private readonly z: number = 1.7;
+  private hasOwner: boolean = false;
 
   constructor() {
     super();
     const experience = new Experience();
     this.physicalWorld = experience.physicalWorld;
     this.resources = experience.resources;
+    this.scene = experience.scene;
+    this.hasOwner = true;
 
     this.loadModel().then(() => {
       this.setPhysicalObject();
     });
   }
 
+  throw(direction: Vector3): void {
+    this.hasOwner = false;
+    this.scene.add(this.mesh!);
+    this.rigidBody?.setBodyType(RigidBodyType.Dynamic, true);
+    direction.multiplyScalar(100);
+
+    this.rigidBody?.setLinvel(
+      { x: direction.x, y: direction.y, z: direction.z },
+      true,
+    );
+  }
+
   update(): void {
-    const weaponWorldPos = new Vector3();
-    const weaponWorldQuat = new Quaternion();
+    if (this.hasOwner) {
+      const weaponWorldPos = new Vector3();
+      const weaponWorldQuat = new Quaternion();
 
-    this.model?.scene.getWorldPosition(weaponWorldPos);
-    this.model?.scene.getWorldQuaternion(weaponWorldQuat);
+      this._mesh?.getWorldPosition(weaponWorldPos);
+      this._mesh?.getWorldQuaternion(weaponWorldQuat);
 
-    this.rigidBody?.setNextKinematicTranslation(weaponWorldPos);
-    this.rigidBody?.setNextKinematicRotation(weaponWorldQuat);
+      this.rigidBody?.setNextKinematicTranslation(weaponWorldPos);
+      this.rigidBody?.setNextKinematicRotation(weaponWorldQuat);
+    } else {
+      const position = this.rigidBody?.translation();
+      const rotation = this.rigidBody?.rotation();
+      if (position && rotation && this.mesh) {
+        this.mesh.position.set(position.x, position.y, position.z);
+        this.mesh.setRotationFromQuaternion(
+          new Quaternion(rotation.x, rotation.y, rotation.z, rotation.w),
+        );
+      }
+    }
   }
 
   get mesh(): Object3D | undefined {
-    return this.model?.scene;
+    return this._mesh;
   }
 
   private setPhysicalObject(): void {
     const { rigidBody } = this.physicalWorld.createObject({
-      shape: { type: "cylinder", radius: 0.2, height: 3 },
-      density: 0.01,
+      shape: { type: "cylinder", radius: 0.1, height: 3 },
+      density: 3,
+      restitution: 0.3,
       rigidBodyType: "kinematicPositionBased",
+      ccdEnabled: true,
       collisionGroups: InteractionGroups.PLAYER_WEAPON,
     });
 
@@ -55,10 +85,15 @@ export default class Hammer extends Watchable implements Weapon {
   }
 
   private async loadModel(): Promise<void> {
-    this.model = await this.resources.loadModel("models/hammer.glb");
-    this.model?.scene.scale.setScalar(0.3);
-    this.model?.scene.position.set(this.x, this.y, this.z);
-    this.model?.scene.rotation.set(1.1, 1, 0.4);
+    const model = await this.resources.loadModel("models/hammer.glb");
+    this._mesh = model?.scene.clone();
+    if (!this._mesh) {
+      console.error("Hammer: model mesh is undefined");
+      return;
+    }
+    this._mesh.scale.setScalar(0.3);
+    this._mesh.position.set(this.x, this.y, this.z);
+    this._mesh.rotation.set(1.1, 1, 0.4);
     this.dispatchEvent({ type: "loaded" });
   }
 }

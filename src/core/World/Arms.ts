@@ -1,4 +1,5 @@
 import { GLTF } from "three/examples/jsm/Addons.js";
+import * as THREE from "three";
 import Experience from "../Experience";
 import Resources from "../Utils/Resources";
 import PhysicalEntity from "../models/PhysicalEntity";
@@ -10,10 +11,18 @@ import {
 } from "../constants/ArmsAnimations";
 import { Weapon } from "../models/Weapon";
 import { Watchable } from "../Utils/LoadWatcher";
+import Camera from "../Camera";
+import {
+  PlayerState,
+  PlayerStateEvent,
+  PlayerStateMachine,
+} from "../constants/PlayerStateMachine";
+import { PlayerStateToAnimationMap } from "../constants/PlayerStateToAnimationMap";
 
 export default class Arms extends Watchable {
   private readonly resources: Resources;
   private readonly time: Time;
+  private readonly camera: Camera;
   private parent: PhysicalEntity;
   private model?: GLTF;
   private animationMixer?: AnimationMixer;
@@ -22,11 +31,16 @@ export default class Arms extends Watchable {
   private currentAction?: AnimationAction;
   private animationRepetitions: number = Infinity;
   private animationTimeScale: number = 1;
+  private weapon?: Weapon;
+  private stateMachine: PlayerStateMachine = new PlayerStateMachine(
+    PlayerState.NONE,
+  );
 
   constructor(parent: PhysicalEntity) {
     super();
     this.parent = parent;
     const experience = new Experience();
+    this.camera = experience.camera;
 
     this.resources = experience.resources;
     this.time = experience.time;
@@ -37,14 +51,15 @@ export default class Arms extends Watchable {
   }
 
   hit(): void {
-    const randomAttackAnimation =
-      PlayerAnimations.ATTACKS[
-        Math.floor(Math.random() * PlayerAnimations.ATTACKS.length)
-      ].actionName;
-    this.setCurrentActionName(randomAttackAnimation);
+    this.transitionState(PlayerStateEvent.ATTACK);
+  }
+
+  throw(): void {
+    this.transitionState(PlayerStateEvent.THROW);
   }
 
   setWeapon(weapon: Weapon): void {
+    this.weapon = weapon;
     const rightHandBone = this.model?.scene.getObjectByName("Right_Ombro019");
     if (!rightHandBone) {
       console.error("Right hand bone not found in the model.");
@@ -55,7 +70,7 @@ export default class Arms extends Watchable {
       return;
     }
 
-    this.setCurrentActionName("Draw_sword");
+    this.transitionState(PlayerStateEvent.DRAW_SWORD);
     rightHandBone.add(weapon.mesh);
   }
 
@@ -64,7 +79,7 @@ export default class Arms extends Watchable {
       this.changeAnimation();
     }
 
-    this.animationMixer?.update(this.time.delta / 1000);
+    this.animationMixer?.update(this.time.delta);
   }
 
   private async loadModel(): Promise<void> {
@@ -79,12 +94,13 @@ export default class Arms extends Watchable {
 
       this.parent.mesh.add(modelMesh);
 
-      this.setAnimationMixer(this.model);
+      this.setupAnimations(this.model);
+      this.transitionState(PlayerStateEvent.UNEQUIP_SWORD);
     }
     this.dispatchEvent({ type: "loaded" });
   }
 
-  private setAnimationMixer(model: GLTF): void {
+  private setupAnimations(model: GLTF): void {
     const animationMixer = new AnimationMixer(model.scene);
     this.animationMixer = animationMixer;
 
@@ -93,14 +109,26 @@ export default class Arms extends Watchable {
         animation.name as ArmsAnimationKey,
         animationMixer.clipAction(animation),
       );
+
+      if (animation.name === "Attack_01") {
+        const throwAction = THREE.AnimationUtils.subclip(
+          animation,
+          "Throw",
+          0,
+          13,
+          30,
+        );
+        this.animationActions.set(
+          "Throw",
+          animationMixer.clipAction(throwAction),
+        );
+      }
     });
 
     this.animationMixer.addEventListener(
       "finished",
       this.handleAnimationComplete,
     );
-
-    this.setInitialAnimationPosition();
   }
 
   private setCurrentActionName(name: ArmsAnimationKey): void {
@@ -111,18 +139,8 @@ export default class Arms extends Watchable {
     this.animationRepetitions = animationMetadata.repetitions ?? Infinity;
   }
 
-  private setInitialAnimationPosition(): void {
-    this.currentActionName = "Unequip_Sword";
-    this.currentAction = this.animationActions.get(this.currentActionName)!;
-    this.currentAction.play();
-    this.currentAction.time = this.currentAction!.getClip().duration;
-    this.animationMixer?.update(0);
-  }
-
-  private handleAnimationComplete(event: { action: AnimationAction }): void {
-    if (event.action.getClip().name !== "Idle") {
-      this.setCurrentActionName("Idle");
-    }
+  private handleAnimationComplete(): void {
+    this.transitionState(PlayerStateEvent.FINISHED);
   }
 
   private changeAnimation(): void {
@@ -146,6 +164,33 @@ export default class Arms extends Watchable {
       this.currentAction.setEffectiveTimeScale(this.animationTimeScale);
       this.currentAction.repetitions = this.animationRepetitions;
       this.currentAction.clampWhenFinished = true;
+    }
+  }
+
+  private transitionState(event: PlayerStateEvent): void {
+    const prevState = this.stateMachine.currentState;
+
+    this.stateMachine.transition(event);
+
+    const newState = this.stateMachine.currentState;
+
+    if (prevState === newState) {
+      return;
+    }
+
+    if (
+      prevState === PlayerState.THROWING &&
+      event === PlayerStateEvent.FINISHED
+    ) {
+      const cameraDirection = this.camera.instance.getWorldDirection(
+        new THREE.Vector3(0, 0, 0),
+      );
+      this.weapon?.throw(cameraDirection);
+    }
+
+    const animationKey = PlayerStateToAnimationMap[newState];
+    if (animationKey) {
+      this.setCurrentActionName(animationKey);
     }
   }
 }

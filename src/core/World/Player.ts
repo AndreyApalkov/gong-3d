@@ -21,9 +21,9 @@ export default class Player {
   private readonly minSpeed = 0.3;
   private readonly maxSpeed = 2;
   private _speed: number;
-  private body!: PhysicalEntity;
+  public body!: PhysicalEntity;
   private arms!: Arms;
-  private hammer!: Weapon;
+  public hammer!: Weapon;
   private _moveForward = false;
   private _moveLeft = false;
   private _moveBackward = false;
@@ -45,8 +45,17 @@ export default class Player {
     this.setCharacterController();
 
     this.arms = new Arms(this.body);
+    this.world.addObject(this.arms);
+
+    new LoadWatcher([this.arms], () => {
+      this.setWeapon();
+    });
+  }
+
+  setWeapon(): void {
     this.hammer = new Hammer();
-    new LoadWatcher([this.arms, this.hammer], () => {
+    this.world.addObject(this.hammer);
+    new LoadWatcher([this.hammer], () => {
       this.arms.setWeapon(this.hammer);
     });
   }
@@ -90,7 +99,7 @@ export default class Player {
   }
 
   update() {
-    const delta = this.time.delta / 1000;
+    const delta = this.time.delta;
 
     if (this.body.rigidBody.isSleeping()) {
       this.body.rigidBody.lockTranslations(false, true);
@@ -161,8 +170,6 @@ export default class Player {
     this.detectGround();
 
     this.body.update();
-    this.arms.update();
-    this.hammer.update();
   }
 
   private setCharacterController(): void {
@@ -218,30 +225,7 @@ export default class Player {
   }
 
   throwObject(): void {
-    const cameraDirection = this.camera.instance.getWorldDirection(
-      new THREE.Vector3(0, 0, 0),
-    );
-    const position = this.camera.instance.position
-      .clone()
-      .add(cameraDirection.clone().multiplyScalar(2));
-
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(5, 1, 5),
-      new THREE.MeshStandardMaterial({ color: "#00f" }),
-    );
-    const randomObj = new PhysicalEntity({
-      shape: { type: "box", sizes: { x: 5, y: 1, z: 5 } },
-      density: 1000,
-      // restitution: 1.7,
-      rigidBodyType: "dynamic",
-      position,
-      mesh,
-    });
-
-    cameraDirection.multiplyScalar(200);
-    randomObj.rigidBody.applyImpulse(cameraDirection, true);
-    randomObj.rigidBody.setLinearDamping(0.2);
-
-    this.world.addObject(randomObj);
+    this.arms.throw();
+    this.setWeapon();
   }
 }
