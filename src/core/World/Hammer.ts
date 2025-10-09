@@ -33,14 +33,13 @@ export default class Hammer extends Watchable implements Weapon {
     });
   }
 
-  throw(direction: Vector3): void {
+  throw(velocity: Vector3): void {
     this.hasOwner = false;
     this.scene.add(this.mesh!);
     this.rigidBody?.setBodyType(RigidBodyType.Dynamic, true);
-    direction.multiplyScalar(70);
 
     this.rigidBody?.setLinvel(
-      { x: direction.x, y: direction.y, z: direction.z },
+      { x: velocity.x, y: velocity.y, z: velocity.z },
       true,
     );
     setTimeout(() => {

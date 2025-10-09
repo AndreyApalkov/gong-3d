@@ -32,6 +32,8 @@ export class Blocker extends HTMLElement {
             Jump: SPACE<br />
             Run: SHIFT<br />
             Look: MOUSE<br />
+            Hit: Click<br />
+            Throw: Q
           </p>
           <p>To unlock the mouse pointer, press Esc</p>
         </div>

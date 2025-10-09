@@ -18,8 +18,12 @@ import {
   PlayerStateMachine,
 } from "../constants/PlayerStateMachine";
 import { PlayerStateToAnimationMap } from "../constants/PlayerStateToAnimationMap";
+import GUI from "lil-gui";
+import Debug from "../Utils/Debug";
 
 export default class Arms extends Watchable {
+  private readonly debug: Debug;
+  private debugFolder?: GUI;
   private readonly resources: Resources;
   private readonly time: Time;
   private readonly camera: Camera;
@@ -35,6 +39,7 @@ export default class Arms extends Watchable {
   private stateMachine: PlayerStateMachine = new PlayerStateMachine(
     PlayerState.NONE,
   );
+  private throwingSpeed = 70;
 
   constructor(parent: PhysicalEntity) {
     super();
@@ -43,11 +48,16 @@ export default class Arms extends Watchable {
     this.camera = experience.camera;
 
     this.resources = experience.resources;
+    this.debug = experience.debug;
     this.time = experience.time;
 
     this.loadModel();
 
     this.handleAnimationComplete = this.handleAnimationComplete.bind(this);
+
+    if (this.debug.active) {
+      this.setDebug();
+    }
   }
 
   hit(): void {
@@ -185,6 +195,7 @@ export default class Arms extends Watchable {
       const cameraDirection = this.camera.instance.getWorldDirection(
         new THREE.Vector3(0, 0, 0),
       );
+      cameraDirection.multiplyScalar(this.throwingSpeed);
       this.weapon?.throw(cameraDirection);
     }
 
@@ -192,5 +203,16 @@ export default class Arms extends Watchable {
     if (animationKey) {
       this.setCurrentActionName(animationKey);
     }
+  }
+
+  private setDebug(): void {
+    this.debugFolder = this.debug.ui?.addFolder("hammer");
+
+    this.debugFolder
+      ?.add(this, "throwingSpeed")
+      .min(1)
+      .max(500)
+      .step(1)
+      .name("throwing speed");
   }
 }
