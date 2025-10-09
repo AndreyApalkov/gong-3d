@@ -51,6 +51,7 @@ type RigidBodyType =
 interface RigidBodyParams {
   rigidBodyType: RigidBodyType;
   damping?: number;
+  ccdEnabled?: boolean;
   position?: {
     x: number;
     y: number;
@@ -131,12 +132,12 @@ export default class PhysicalWorld {
   }
 
   update() {
-    this.instance.timestep = (this.time.delta || 16) / 1000;
+    this.instance.timestep = this.time.delta;
     this._instance.step(this._eventQueue);
   }
 
   private createRigidBodyDesc(params: RigidBodyParams): RigidBodyDesc {
-    const { position, rigidBodyType, damping } = params;
+    const { position, rigidBodyType, damping, ccdEnabled } = params;
     const { x, y, z } = position ?? { x: 0, y: 0, z: 0 };
 
     let bodyDesc: RigidBodyDesc;
@@ -163,9 +164,12 @@ export default class PhysicalWorld {
 
     if (damping) {
       bodyDesc.setLinearDamping(damping);
+      bodyDesc.setAngularDamping(damping);
     }
 
-    // bodyDesc.setCcdEnabled(true); // TODO: can be added for fast objects
+    if (ccdEnabled) {
+      bodyDesc.ccdEnabled = true;
+    }
 
     return bodyDesc;
   }
