@@ -34,6 +34,13 @@ export default class Sizes {
     return this._pixelRatio;
   }
 
+  get resolution(): { width: number; height: number } {
+    return {
+      width: this._width * this._pixelRatio,
+      height: this._height * this._pixelRatio,
+    };
+  }
+
   private setSizes(): void {
     this._width = window.innerWidth;
     this._height = window.innerHeight;
