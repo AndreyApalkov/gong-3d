@@ -10,6 +10,7 @@ varying float vSunfade;
 varying vec3 vBetaR;
 varying vec3 vBetaM;
 varying float vSunE;
+varying vec2 vUv;
 
 		// constants for atmospheric scattering
 const float e = 2.71828182845904523536028747135266249775724709369995957;
@@ -70,4 +71,5 @@ void main()
 			// mie coefficients
     vBetaM = totalMie(turbidity) * mieCoefficient;
 
+    vUv = uv;
 }
