@@ -194,14 +194,14 @@ export default class Gong extends Entity {
         x,
       );
 
-      const joint = this.physicalWorld.instance.createImpulseJoint(
+      this.physicalWorld.instance.createImpulseJoint(
         jointParams,
         plate.rigidBody,
         baulkRigidBody,
         true,
       ) as RevoluteImpulseJoint;
 
-      joint.setLimits(-Math.PI + 0.1, Math.PI - 0.1);
+      // joint.setLimits(-Math.PI + 0.1, Math.PI - 0.1);
     }
 
     this.gongPlate = plate;
@@ -219,7 +219,8 @@ export default class Gong extends Entity {
       new THREE.PlaneGeometry(width, height),
       new THREE.MeshStandardMaterial({
         map: this.logoTexture,
-        transparent: true,
+        alphaTest: 0.01,
+        // transparent: true,
       }),
     );
     logoMesh.rotateX(-Math.PI / 2);
