@@ -10,12 +10,11 @@ import Mallet from "./Mallet";
 import Arms from "./Arms";
 import { InteractionGroups } from "../constants/InteractionGroups";
 import { Weapon } from "../models/Weapon";
-import { LoadWatcher } from "../Utils/LoadWatcher";
 
 export default class Player {
   private readonly time: Time;
   private readonly camera: Camera;
-  private readonly world: World;
+  private readonly world?: World;
   private readonly physicalWorld: PhysicalWorld;
   private characterController!: KinematicCharacterController;
   private readonly minSpeed = 0.3;
@@ -45,19 +44,15 @@ export default class Player {
     this.setCharacterController();
 
     this.arms = new Arms(this.body);
-    this.world.addObject(this.arms);
+    this.world?.addObject(this.arms);
 
-    new LoadWatcher([this.arms], () => {
-      this.setWeapon();
-    });
+    this.setWeapon();
   }
 
   setWeapon(): void {
     this.mallet = new Mallet();
-    this.world.addObject(this.mallet);
-    new LoadWatcher([this.mallet], () => {
-      this.arms.setWeapon(this.mallet);
-    });
+    this.world?.addObject(this.mallet);
+    this.arms.setWeapon(this.mallet);
   }
 
   set moveForward(value: boolean) {

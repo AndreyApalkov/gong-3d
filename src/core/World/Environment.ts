@@ -5,12 +5,15 @@ import Debug from "../Utils/Debug";
 import Time from "../Utils/Time";
 import Sky from "./Sky";
 import { Snow } from "../Snow";
+import Resources from "../Utils/Resources";
+import { Textures } from "../sources";
 
 export default class Environment {
   private readonly experience: Experience;
   private readonly scene: THREE.Scene;
   private readonly time: Time;
   private readonly debug: Debug;
+  private readonly resources: Resources;
   private debugFolder?: GUI;
   private sunLight!: THREE.DirectionalLight;
   private ambientLight!: THREE.AmbientLight;
@@ -26,7 +29,9 @@ export default class Environment {
     this.scene = this.experience.scene;
     this.time = this.experience.time;
     this.debug = this.experience.debug;
+    this.resources = this.experience.resources;
     this.snow = new Snow();
+    this.snow.visible = false;
     this.scene.add(this.snow);
 
     this.setLight();
@@ -107,6 +112,14 @@ export default class Environment {
   private setSky(): void {
     this.sky = new Sky();
     this.scene.add(this.sky);
+
+    const environmentTexture = this.resources.getTexture(
+      Textures.EnvironmentNight,
+    );
+    if (environmentTexture) {
+      environmentTexture.mapping = THREE.EquirectangularReflectionMapping;
+      this.scene.environment = environmentTexture;
+    }
   }
 
   update() {
@@ -124,6 +137,7 @@ export default class Environment {
 
     this.sunLight.intensity = 4 * sunLightIntensity;
     this.ambientLight.intensity = ambientIntensity;
+    this.scene.environmentIntensity = ambientIntensity;
     this.spotLight.intensity = isNight ? 60 : 0;
     this.snow.update();
 
@@ -132,5 +146,9 @@ export default class Environment {
     const uniforms = this.sky.material.uniforms;
     uniforms.sunPosition.value = sunPosition;
     uniforms.uDayNightMixFactor.value = uDayNightMixFactor;
+  }
+
+  toggleSnow(visible: boolean): void {
+    this.snow.visible = visible;
   }
 }

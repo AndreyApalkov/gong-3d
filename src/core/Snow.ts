@@ -3,6 +3,7 @@ import Experience from "./Experience";
 import vertexShader from "./shaders/snow/vertex.glsl";
 import fragmentShader from "./shaders/snow/fragment.glsl";
 import Debug from "./Utils/Debug";
+import { Textures } from "./sources";
 
 type Uniforms = {
   uTime: THREE.Uniform<number>;
@@ -33,12 +34,12 @@ export class Snow extends THREE.Group {
       uResolution: new THREE.Uniform(new THREE.Vector2(width, height)),
     };
 
-    resources.loadTexture("textures/sprites/snowflake.png").then((texture) => {
-      if (texture) {
-        this.uniforms.uTexture.value = texture;
-      }
-      this.setPoints();
-    });
+    const texture = resources.getTexture(Textures.Snowflake);
+    if (texture) {
+      this.uniforms.uTexture.value = texture;
+    }
+
+    this.setPoints();
 
     if (this.debug.active) {
       this.setDebug();
@@ -94,7 +95,7 @@ export class Snow extends THREE.Group {
     folder
       ?.add(this, "snowflakesCount")
       .min(1000)
-      .max(5000000)
+      .max(10000000)
       .step(1000)
       .onFinishChange(() => {
         this.points?.geometry.dispose();

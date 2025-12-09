@@ -4,14 +4,13 @@ import vertexShader from "../shaders/sky/vertex.glsl";
 import fragmentShader from "../shaders/sky/fragment.glsl";
 import Resources from "../Utils/Resources";
 import Experience from "../Experience";
+import { Textures } from "../sources";
 
 export default class Sky extends THREE.Mesh<
   THREE.SphereGeometry,
   THREE.ShaderMaterial
 > {
   private readonly resources: Resources;
-  private readonly nightTexturePath =
-    "textures/environment/stars_milky_way_8k.jpg";
   private nightTexture?: THREE.Texture;
   public isSky: boolean;
 
@@ -38,7 +37,7 @@ export default class Sky extends THREE.Mesh<
     this.resources = experience.resources;
     this.isSky = true;
 
-    this.loadTexture();
+    this.setNightTexture();
     this.scale.setScalar(450000);
   }
 
@@ -48,8 +47,8 @@ export default class Sky extends THREE.Mesh<
     this.nightTexture?.dispose();
   }
 
-  private async loadTexture() {
-    this.nightTexture = await this.resources.loadTexture(this.nightTexturePath);
+  private setNightTexture() {
+    this.nightTexture = this.resources.getTexture(Textures.NightSky);
 
     if (this.nightTexture) {
       this.nightTexture.colorSpace = THREE.SRGBColorSpace;

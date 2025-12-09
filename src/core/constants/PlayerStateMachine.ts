@@ -39,7 +39,7 @@ export class PlayerStateMachine {
       [PlayerStateEvent.FINISHED]: PlayerState.IDLE,
     },
     [PlayerState.UNEQUIP_SWORD]: {
-      [PlayerStateEvent.FINISHED]: PlayerState.NONE,
+      [PlayerStateEvent.FINISHED]: PlayerState.IDLE,
     },
   };
 
