@@ -1,33 +1,18 @@
-import Experience from "../Experience";
-import { Textures } from "../sources";
 import { Theme } from "../ThemeManager";
-import Environment from "../World/Environment";
-import World from "../World/World";
+import { WinterTheme } from "./WinterTheme";
 
-export class NewYearTheme implements Theme {
-  private world?: World;
-  private environment?: Environment;
-
+export class NewYearTheme extends WinterTheme implements Theme {
   constructor() {
-    const experience = new Experience();
-    this.world = experience.world;
-    this.environment = this.world?.environment;
+    super();
   }
 
   apply(): void {
-    this.world?.floor?.setTextures([
-      Textures.SnowFloorColor,
-      Textures.SnowFloorNormal,
-      Textures.SnowFloorDisplacement,
-      Textures.SnowFloorRoughness,
-      Textures.SnowFloorAO,
-    ]);
-    this.environment?.toggleSnow(true);
+    super.apply();
     this.world?.christmasTree?.setVisible(true);
   }
 
   discard(): void {
-    this.environment?.toggleSnow(false);
+    super.discard();
     this.world?.christmasTree?.setVisible(false);
   }
 }

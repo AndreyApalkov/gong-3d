@@ -1,6 +1,7 @@
 import Experience from "./Experience";
 import { DefaultTheme } from "./themes/DefaultTheme";
 import { NewYearTheme } from "./themes/NewYearTheme";
+import { WinterTheme } from "./themes/WinterTheme";
 import Debug from "./Utils/Debug";
 
 export interface Theme {
@@ -10,6 +11,7 @@ export interface Theme {
 
 export enum ThemeName {
   Default = "default",
+  Winter = "winter",
   NewYear = "newYear",
 }
 
@@ -17,6 +19,7 @@ export class ThemeManager {
   private readonly themeLoaders: Record<ThemeName, Theme> = {
     [ThemeName.Default]: new DefaultTheme(),
     [ThemeName.NewYear]: new NewYearTheme(),
+    [ThemeName.Winter]: new WinterTheme(),
   };
   public currentThemeName: ThemeName = ThemeName.NewYear;
   private currentTheme?: Theme;
