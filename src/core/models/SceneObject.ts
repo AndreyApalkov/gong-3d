@@ -2,12 +2,12 @@ import * as THREE from "three";
 import Experience from "../Experience";
 
 export type SceneObjectParams = {
-  mesh: THREE.Mesh;
+  mesh: THREE.Object3D;
 };
 
 export default class SceneObject {
   private readonly scene: THREE.Scene;
-  private _mesh: THREE.Mesh;
+  private _mesh: THREE.Object3D;
 
   constructor(params: SceneObjectParams) {
     const { mesh } = params;
@@ -18,7 +18,7 @@ export default class SceneObject {
     this.setMesh();
   }
 
-  get mesh(): THREE.Mesh {
+  get mesh(): THREE.Object3D {
     return this._mesh;
   }
 

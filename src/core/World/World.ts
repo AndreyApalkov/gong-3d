@@ -23,6 +23,7 @@ export default class World {
   }
 
   update(): void {
+    this.christmasTree?.update();
     this.environment?.update();
 
     this.objects.forEach((object) => object.update());

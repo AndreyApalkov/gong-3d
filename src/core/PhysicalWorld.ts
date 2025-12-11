@@ -52,6 +52,7 @@ interface ColliderParams {
   density?: number;
   restitution?: number;
   collisionGroups?: number;
+  friction?: number;
 }
 
 type RigidBodyType =
@@ -187,7 +188,7 @@ export default class PhysicalWorld {
   }
 
   private createColliderDesc(params: ColliderParams): ColliderDesc {
-    const { shape, density, restitution, collisionGroups } = params;
+    const { shape, density, restitution, collisionGroups, friction } = params;
     let colliderDesc: ColliderDesc;
 
     switch (shape.type) {
@@ -219,6 +220,9 @@ export default class PhysicalWorld {
 
     if (density) {
       colliderDesc.setDensity(density);
+    }
+    if (friction) {
+      colliderDesc.setFriction(friction);
     }
     if (restitution) {
       colliderDesc.setRestitution(restitution);
