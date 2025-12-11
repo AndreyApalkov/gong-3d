@@ -5,12 +5,14 @@ import Time, { TimeEvent } from "./Utils/Time";
 import Camera from "./Camera";
 import Renderer from "./Renderer";
 import World from "./World/World";
-import Resources from "./Utils/Resources";
+import Resources, { ResourcesEvent } from "./Utils/Resources";
 import Debug from "./Utils/Debug";
 import eventsManager, { EventsManager } from "./Utils/EventsManager";
 import PhysicalWorld from "./PhysicalWorld";
 import Player from "./World/Player";
 import PlayerInputHandler from "./PlayerInputHandler";
+import { modelsToPreload, texturesToPreload } from "./sources";
+import { ThemeManager } from "./ThemeManager";
 
 let instance: Experience;
 
@@ -23,10 +25,10 @@ export default class Experience {
   public readonly resources!: Resources;
   public readonly camera!: Camera;
   public readonly renderer!: Renderer;
-  public readonly world!: World;
   public readonly physicalWorld!: PhysicalWorld;
   private readonly eventsManager: EventsManager = eventsManager;
-  private player!: Player;
+  private player?: Player;
+  public world?: World;
 
   private stats?: Stats;
 
@@ -50,14 +52,21 @@ export default class Experience {
     this.camera = new Camera();
     this.renderer = new Renderer();
     this.physicalWorld = new PhysicalWorld();
-    this.world = new World();
-    this.player = new Player();
-    new PlayerInputHandler(this.player);
+
     // this.scene.fog = new THREE.Fog(0xf9efa9, 0, 200);
+    this.resources.loadModels(modelsToPreload);
+    this.resources.loadTextures(texturesToPreload);
 
     // Sizes resize event
     this.eventsManager.on(SizesEvent.Resize, () => {
       this.resize();
+    });
+
+    this.eventsManager.on(ResourcesEvent.Ready, () => {
+      this.world = new World();
+      this.player = new Player();
+      new PlayerInputHandler(this.player);
+      new ThemeManager();
     });
 
     // Time tick event
@@ -107,8 +116,8 @@ export default class Experience {
     }
     this.physicalWorld.update();
     // this.camera.update();
-    this.world.update();
-    this.player.update();
+    this.world?.update();
+    this.player?.update();
     this.renderer.update();
     if (this.debug.active) {
       this.stats?.end();

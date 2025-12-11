@@ -4,10 +4,12 @@ varying float vSunfade;
 varying vec3 vBetaR;
 varying vec3 vBetaM;
 varying float vSunE;
+varying vec2 vUv;
 
 uniform float mieDirectionalG;
 uniform vec3 up;
-uniform float uOpacity;
+uniform float uDayNightMixFactor;
+uniform sampler2D uNightTexture;
 
 		// constants for atmospheric scattering
 const float pi = 3.141592653589793238462643383279502884197169;
@@ -41,6 +43,7 @@ float hgPhase(float cosTheta, float g)
 void main()
 {
 
+    vec3 nightColor = texture(uNightTexture, vUv).rgb;
     vec3 direction = normalize(vWorldPosition - cameraPosition);
 
 			// optical length
@@ -79,7 +82,8 @@ void main()
 
     vec3 retColor = pow(texColor, vec3(1.0 / (1.2 + (1.2 * vSunfade))));
 
-    gl_FragColor = vec4(retColor, uOpacity);
+    vec3 finalColor = mix(nightColor, retColor, uDayNightMixFactor);
+    gl_FragColor = vec4(finalColor, 1.0);
 
 			#include <tonemapping_fragment>
 			#include <colorspace_fragment>

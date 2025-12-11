@@ -53,7 +53,7 @@ export class SplashScreen extends HTMLElement {
       if (this.splashScreen) {
         this.splashScreen.style.display = "none";
       }
-    }, 3000);
+    }, 4000);
 
     setTimeout(() => {
       this.loadingBar?.hide();

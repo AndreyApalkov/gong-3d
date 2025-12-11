@@ -7,10 +7,17 @@ import PhysicalWorld from "../PhysicalWorld";
 import type { RevoluteImpulseJoint } from "@dimforge/rapier3d";
 import { InteractionGroups } from "../constants/InteractionGroups";
 import RAPIER from "@dimforge/rapier3d";
+import { Textures } from "../sources";
+import eventsManager, { EventsManager } from "../Utils/EventsManager";
+
+export enum GongEvent {
+  Hit = "gong:hit",
+}
 
 export default class Gong extends Entity {
   private children: PhysicalEntity[] = [];
-  private resources: Resources;
+  private readonly resources: Resources;
+  private readonly eventsManager: EventsManager = eventsManager;
   private baulkColorTexture?: THREE.Texture;
   private baulkNormalTexture?: THREE.Texture;
   private plateColorTexture?: THREE.Texture;
@@ -30,9 +37,7 @@ export default class Gong extends Entity {
     this.resources = experience.resources;
     this.physicalWorld = experience.physicalWorld;
 
-    this.loadTextures().then(() => {
-      this.init();
-    });
+    this.init();
   }
 
   update(): void {
@@ -41,12 +46,13 @@ export default class Gong extends Entity {
     this.physicalWorld.eventQueue.drainContactForceEvents((event) => {
       const force = event.maxForceMagnitude();
       if (force > 200) {
+        this.eventsManager.emit(GongEvent.Hit);
         this.playSound(force);
       }
     });
   }
 
-  private async loadTextures(): Promise<void> {
+  private getTextures(): void {
     const [
       baulkColorTexture,
       baulkNormalTexture,
@@ -56,15 +62,15 @@ export default class Gong extends Entity {
       plateRoughnessTexture,
       plateAmbientOcclusionTexture,
       logoTexture,
-    ] = await this.resources.loadTextures([
-      "textures/baulk/color.jpg",
-      "textures/baulk/normal.jpg",
-      "textures/gong-plate-7/color.jpg",
-      "textures/gong-plate-7/normal.jpg",
-      "textures/gong-plate-7/metallic.jpg",
-      "textures/gong-plate-7/roughness.jpg",
-      "textures/gong-plate-7/ambientOcclusion.jpg",
-      "textures/logo/casechek-logo.png",
+    ] = this.resources.getTextures([
+      Textures.BaulkColor,
+      Textures.BaulkNormal,
+      Textures.GongPlateColor,
+      Textures.GongPlateNormal,
+      Textures.GongPlateMetallic,
+      Textures.GongPlateRoughness,
+      Textures.GongPlateAO,
+      Textures.Logo,
     ]);
     this.baulkColorTexture = baulkColorTexture;
     this.baulkNormalTexture = baulkNormalTexture;
@@ -77,6 +83,7 @@ export default class Gong extends Entity {
   }
 
   private init(): void {
+    this.getTextures();
     this.setTextures();
     this.createColumns();
     this.createPlate();
@@ -194,14 +201,14 @@ export default class Gong extends Entity {
         x,
       );
 
-      const joint = this.physicalWorld.instance.createImpulseJoint(
+      this.physicalWorld.instance.createImpulseJoint(
         jointParams,
         plate.rigidBody,
         baulkRigidBody,
         true,
       ) as RevoluteImpulseJoint;
 
-      joint.setLimits(-Math.PI + 0.1, Math.PI - 0.1);
+      // joint.setLimits(-Math.PI + 0.1, Math.PI - 0.1);
     }
 
     this.gongPlate = plate;
@@ -219,7 +226,8 @@ export default class Gong extends Entity {
       new THREE.PlaneGeometry(width, height),
       new THREE.MeshStandardMaterial({
         map: this.logoTexture,
-        transparent: true,
+        alphaTest: 0.01,
+        // transparent: true,
       }),
     );
     logoMesh.rotateX(-Math.PI / 2);

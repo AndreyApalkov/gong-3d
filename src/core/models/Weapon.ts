@@ -1,7 +1,6 @@
 import { Object3D, Vector3 } from "three";
-import { Watchable } from "../Utils/LoadWatcher";
 
-export interface Weapon extends Watchable {
+export interface Weapon {
   throw(velocity: Vector3): void;
   update(): void;
   mesh: Object3D | undefined;

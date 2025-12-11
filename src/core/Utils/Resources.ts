@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { GLTF, GLTFLoader } from "three/examples/jsm/Addons.js";
+import { EXRLoader, GLTF, GLTFLoader } from "three/examples/jsm/Addons.js";
 import eventsManager, { EventsManager } from "./EventsManager";
 
 export enum ResourcesEvent {
@@ -9,7 +9,8 @@ export enum ResourcesEvent {
 
 interface Loaders {
   texture: THREE.TextureLoader;
-  gltfLoader: GLTFLoader;
+  exr: EXRLoader;
+  gltf: GLTFLoader;
 }
 
 export default class Resources {
@@ -17,38 +18,70 @@ export default class Resources {
   private readonly loaders: Loaders;
   private readonly eventsManager: EventsManager = eventsManager;
   private readonly modelCache: Map<string, GLTF> = new Map();
+  private readonly textureCache: Map<string, THREE.Texture> = new Map();
   private readonly loadingModels: Map<string, Promise<GLTF | undefined>> =
     new Map();
+  private readonly loadingTextures: Map<
+    string,
+    Promise<THREE.Texture | undefined>
+  > = new Map();
 
   constructor() {
     this.loadingManager = new THREE.LoadingManager();
     this.loaders = {
       texture: new THREE.TextureLoader(this.loadingManager),
-      gltfLoader: new GLTFLoader(this.loadingManager),
+      exr: new EXRLoader(this.loadingManager),
+      gltf: new GLTFLoader(this.loadingManager),
     };
 
     this.listenLoadingEvents();
   }
 
   loadTexture(path: string): Promise<THREE.Texture | undefined> {
-    return new Promise((resolve) => {
-      // TODO: consider caching if necessary
-      this.loaders.texture.load(
+    if (this.textureCache.has(path)) {
+      const texture = this.textureCache.get(path);
+      return Promise.resolve(texture);
+    }
+
+    if (this.loadingTextures.has(path)) {
+      return this.loadingTextures.get(path)!;
+    }
+
+    const loader = path.endsWith(".exr")
+      ? this.loaders.exr
+      : this.loaders.texture;
+
+    const texturePromise = new Promise<THREE.Texture | undefined>((resolve) => {
+      loader.load(
         path,
         (file) => {
+          this.textureCache.set(path, file);
+          this.loadingTextures.delete(path);
           resolve(file);
         },
         (_: ProgressEvent) => {},
         (error: any) => {
           console.error("Load texture error:", error);
+          this.loadingTextures.delete(path);
           resolve(undefined);
         },
       );
     });
+
+    this.loadingTextures.set(path, texturePromise);
+    return texturePromise;
   }
 
   loadTextures(paths: string[]): Promise<Array<THREE.Texture | undefined>> {
     return Promise.all(paths.map((path) => this.loadTexture(path)));
+  }
+
+  getTexture(path: string): THREE.Texture | undefined {
+    return this.textureCache.get(path);
+  }
+
+  getTextures(paths: string[]): Array<THREE.Texture | undefined> {
+    return paths.map((path) => this.getTexture(path));
   }
 
   loadModel(path: string): Promise<GLTF | undefined> {
@@ -62,7 +95,7 @@ export default class Resources {
     }
 
     const modelPromise = new Promise<GLTF | undefined>((resolve) => {
-      this.loaders.gltfLoader.load(
+      this.loaders.gltf.load(
         path,
         (file) => {
           this.modelCache.set(path, file);
@@ -80,6 +113,14 @@ export default class Resources {
 
     this.loadingModels.set(path, modelPromise);
     return modelPromise;
+  }
+
+  loadModels(paths: string[]): Promise<Array<GLTF | undefined>> {
+    return Promise.all(paths.map((path) => this.loadModel(path)));
+  }
+
+  getModel(path: string): GLTF | undefined {
+    return this.modelCache.get(path);
   }
 
   private listenLoadingEvents(): void {

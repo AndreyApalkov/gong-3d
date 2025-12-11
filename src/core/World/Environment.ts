@@ -3,20 +3,31 @@ import GUI from "lil-gui";
 import Experience from "../Experience";
 import Debug from "../Utils/Debug";
 import Time from "../Utils/Time";
-import Resources from "../Utils/Resources";
 import Sky from "./Sky";
+import { Snow } from "../Snow";
+import Resources from "../Utils/Resources";
+import { Textures } from "../sources";
+
+export type TimeOfDay = "morning" | "day" | "evening" | "night";
 
 export default class Environment {
+  private readonly times = {
+    morning: THREE.MathUtils.degToRad(80),
+    day: THREE.MathUtils.degToRad(-20),
+    evening: THREE.MathUtils.degToRad(275),
+    night: THREE.MathUtils.degToRad(180),
+  };
   private readonly experience: Experience;
   private readonly scene: THREE.Scene;
   private readonly time: Time;
   private readonly debug: Debug;
   private readonly resources: Resources;
   private debugFolder?: GUI;
-  private texture?: THREE.Texture;
   private sunLight!: THREE.DirectionalLight;
   private ambientLight!: THREE.AmbientLight;
+  private spotLight!: THREE.SpotLight;
   private sky!: Sky;
+  private snow: Snow;
   private phi = THREE.MathUtils.degToRad(80);
   private theta = THREE.MathUtils.degToRad(50);
   private timeScale = 1;
@@ -27,22 +38,16 @@ export default class Environment {
     this.time = this.experience.time;
     this.debug = this.experience.debug;
     this.resources = this.experience.resources;
+    this.snow = new Snow();
+    this.snow.visible = false;
+    this.scene.add(this.snow);
 
     this.setLight();
     this.setSky();
-    this.loadTexture().then(() => {
-      this.setNightMap();
 
-      if (this.debug.active) {
-        this.setDebug();
-      }
-    });
-  }
-
-  private async loadTexture(): Promise<void> {
-    this.texture = await this.resources.loadTexture(
-      "textures/environment/stars_milky_way_8k.jpg",
-    );
+    if (this.debug.active) {
+      this.setDebug();
+    }
   }
 
   private setLight(): void {
@@ -61,8 +66,26 @@ export default class Environment {
     // this.sunLight.shadow.camera.position.set(3.5, 2, -1.25).multiplyScalar(100);
     this.scene.add(this.sunLight);
     // ambient light
-    this.ambientLight = new THREE.AmbientLight("#ffffff", 0.05);
+    this.ambientLight = new THREE.AmbientLight("#ffffff", 0.5);
     this.scene.add(this.ambientLight);
+
+    // spot light
+    this.spotLight = new THREE.SpotLight(
+      "#edb554",
+      60,
+      300,
+      Math.PI / 3,
+      0.5,
+      1,
+    );
+    this.spotLight.position.set(0, 15, 3);
+    this.spotLight.castShadow = true;
+    this.spotLight.shadow.mapSize.width = 512;
+    this.spotLight.shadow.mapSize.height = 512;
+    this.spotLight.shadow.camera.near = 0.5;
+    this.spotLight.shadow.camera.far = 20;
+
+    this.scene.add(this.spotLight);
   }
 
   private setDebug(): void {
@@ -96,38 +119,21 @@ export default class Environment {
 
   private setSky(): void {
     this.sky = new Sky();
-    this.sky.scale.setScalar(450000);
-
-    const sunPosition = new THREE.Vector3().setFromSphericalCoords(
-      1,
-      this.phi,
-      this.theta,
-    );
-
-    const uniforms = this.sky.material.uniforms;
-    uniforms.sunPosition.value = sunPosition;
-    uniforms.turbidity.value = 10;
-    uniforms.rayleigh.value = 3;
-    uniforms.mieCoefficient.value = 0.005;
-    uniforms.mieDirectionalG.value = 0.7;
-
-    this.sky.material.transparent = true;
-
     this.scene.add(this.sky);
-  }
 
-  private setNightMap(): void {
-    if (this.texture) {
-      this.texture.colorSpace = THREE.SRGBColorSpace;
-      this.texture.mapping = THREE.EquirectangularReflectionMapping;
-      this.scene.background = this.texture;
-      this.scene.backgroundRotation = new THREE.Euler(0, 0, Math.PI * 0.5);
+    const environmentTexture = this.resources.getTexture(
+      Textures.EnvironmentNight,
+    );
+    if (environmentTexture) {
+      environmentTexture.mapping = THREE.EquirectangularReflectionMapping;
+      this.scene.environment = environmentTexture;
     }
   }
 
   update() {
     this.phi -= (this.time.delta * Math.PI * 2 * this.timeScale) / 86400;
     const sunCosine = Math.cos(this.phi);
+    const isNight = sunCosine < 0;
     const sunPosition = new THREE.Vector3().setFromSphericalCoords(
       1,
       this.phi,
@@ -135,9 +141,26 @@ export default class Environment {
     );
     this.sunLight.position.copy(sunPosition.clone().multiplyScalar(50));
     const sunLightIntensity = THREE.MathUtils.smoothstep(sunCosine, -0.2, 0.1);
-    const skyOpacity = THREE.MathUtils.smoothstep(sunCosine, -0.5, 0.2);
+    const ambientIntensity = Math.max(0.5 * sunLightIntensity, 0.1);
+
     this.sunLight.intensity = 4 * sunLightIntensity;
-    this.sky.material.uniforms.sunPosition.value = sunPosition;
-    this.sky.material.uniforms.uOpacity.value = skyOpacity;
+    this.ambientLight.intensity = ambientIntensity;
+    this.scene.environmentIntensity = ambientIntensity;
+    this.spotLight.intensity = isNight ? 60 : 0;
+    this.snow.update();
+
+    // Update sky
+    const uDayNightMixFactor = THREE.MathUtils.smoothstep(sunCosine, -0.5, 0.3);
+    const uniforms = this.sky.material.uniforms;
+    uniforms.sunPosition.value = sunPosition;
+    uniforms.uDayNightMixFactor.value = uDayNightMixFactor;
+  }
+
+  toggleSnow(visible: boolean): void {
+    this.snow.visible = visible;
+  }
+
+  setTimeOfDay(time: TimeOfDay): void {
+    this.phi = this.times[time];
   }
 }

@@ -7,9 +7,9 @@ import Resources from "../Utils/Resources";
 import { Object3D, Quaternion, Vector3 } from "three";
 import { InteractionGroups } from "../constants/InteractionGroups";
 import { Weapon } from "../models/Weapon";
-import { Watchable } from "../Utils/LoadWatcher";
+import { Models } from "../sources";
 
-export default class Mallet extends Watchable implements Weapon {
+export default class Mallet implements Weapon {
   private resources: Resources;
   private physicalWorld: PhysicalWorld;
   private readonly scene: THREE.Scene;
@@ -21,16 +21,14 @@ export default class Mallet extends Watchable implements Weapon {
   private hasOwner: boolean = false;
 
   constructor() {
-    super();
     const experience = new Experience();
     this.physicalWorld = experience.physicalWorld;
     this.resources = experience.resources;
     this.scene = experience.scene;
     this.hasOwner = true;
 
-    this.loadModel().then(() => {
-      this.setPhysicalObject();
-    });
+    this.setModel();
+    this.setPhysicalObject();
   }
 
   throw(velocity: Vector3): void {
@@ -82,6 +80,7 @@ export default class Mallet extends Watchable implements Weapon {
       rigidBodyType: "kinematicPositionBased",
       ccdEnabled: true,
       collisionGroups: InteractionGroups.PLAYER_WEAPON,
+      position: { x: 100, y: 100, z: 100 },
     });
 
     const euler = new THREE.Euler(0, 0, Math.PI);
@@ -90,8 +89,8 @@ export default class Mallet extends Watchable implements Weapon {
     this.rigidBody = rigidBody;
   }
 
-  private async loadModel(): Promise<void> {
-    const model = await this.resources.loadModel("models/mallet.glb");
+  private setModel(): void {
+    const model = this.resources.getModel(Models.Mallet);
     this._mesh = model?.scene.clone();
     if (!this._mesh) {
       console.error("Mallet: model mesh is undefined");
@@ -99,6 +98,5 @@ export default class Mallet extends Watchable implements Weapon {
     }
     this._mesh.position.set(this.x, this.y, this.z);
     this._mesh.rotation.set(1.1, 1, 0.4);
-    this.dispatchEvent({ type: "loaded" });
   }
 }

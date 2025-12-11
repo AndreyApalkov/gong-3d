@@ -10,7 +10,6 @@ import {
   PlayerAnimations,
 } from "../constants/ArmsAnimations";
 import { Weapon } from "../models/Weapon";
-import { Watchable } from "../Utils/LoadWatcher";
 import Camera from "../Camera";
 import {
   PlayerState,
@@ -20,8 +19,9 @@ import {
 import { PlayerStateToAnimationMap } from "../constants/PlayerStateToAnimationMap";
 import GUI from "lil-gui";
 import Debug from "../Utils/Debug";
+import { Models } from "../sources";
 
-export default class Arms extends Watchable {
+export default class Arms {
   private readonly debug: Debug;
   private debugFolder?: GUI;
   private readonly resources: Resources;
@@ -42,7 +42,6 @@ export default class Arms extends Watchable {
   private throwingSpeed = 70;
 
   constructor(parent: PhysicalEntity) {
-    super();
     this.parent = parent;
     const experience = new Experience();
     this.camera = experience.camera;
@@ -51,9 +50,8 @@ export default class Arms extends Watchable {
     this.debug = experience.debug;
     this.time = experience.time;
 
-    this.loadModel();
-
     this.handleAnimationComplete = this.handleAnimationComplete.bind(this);
+    this.getModel();
 
     if (this.debug.active) {
       this.setDebug();
@@ -92,8 +90,8 @@ export default class Arms extends Watchable {
     this.animationMixer?.update(this.time.delta);
   }
 
-  private async loadModel(): Promise<void> {
-    this.model = await this.resources.loadModel("models/arms.glb");
+  private getModel(): void {
+    this.model = this.resources.getModel(Models.Arms);
 
     if (this.model?.scene) {
       const modelMesh = this.model.scene;
@@ -107,7 +105,6 @@ export default class Arms extends Watchable {
       this.setupAnimations(this.model);
       this.transitionState(PlayerStateEvent.UNEQUIP_SWORD);
     }
-    this.dispatchEvent({ type: "loaded" });
   }
 
   private setupAnimations(model: GLTF): void {
