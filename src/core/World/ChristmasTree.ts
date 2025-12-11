@@ -1,25 +1,20 @@
 import * as THREE from "three";
-import { type RigidBody } from "@dimforge/rapier3d";
 import { GLTF } from "three/examples/jsm/Addons.js";
 import Experience from "../Experience";
 import Resources from "../Utils/Resources";
 import { Models } from "../sources";
 import PhysicalEntity from "../models/PhysicalEntity";
 
-export class ChristmasTree extends THREE.Group {
+export class ChristmasTree {
   private readonly resources: Resources;
   private model?: GLTF;
-  private rigidBody?: RigidBody;
   private gifts: PhysicalEntity[] = [];
   private tree?: PhysicalEntity;
 
-  constructor(position: THREE.Vector3 = new THREE.Vector3(0, 0, 0)) {
-    super();
+  constructor(private position: THREE.Vector3 = new THREE.Vector3(0, 0, 0)) {
     const experience = new Experience();
 
     this.resources = experience.resources;
-
-    this.position.copy(position);
     this.setup();
   }
 
@@ -50,7 +45,8 @@ export class ChristmasTree extends THREE.Group {
       });
 
       this.model.scene.rotateY(Math.PI / 2);
-      this.add(this.model.scene);
+      const group = new THREE.Group();
+      group.add(this.model.scene);
 
       const boundingBox = new THREE.Box3().setFromObject(this.model.scene);
       const size = new THREE.Vector3();
@@ -68,12 +64,8 @@ export class ChristmasTree extends THREE.Group {
         friction: 1,
         damping: 2,
         density: 100,
-        mesh: this,
+        mesh: group,
       });
-
-      const { rigidBody } = this.tree;
-
-      this.rigidBody = rigidBody;
     }
   }
 
@@ -122,11 +114,15 @@ export class ChristmasTree extends THREE.Group {
   }
 
   setVisible(value: boolean) {
-    this.visible = value;
-
-    if (this.rigidBody) {
-      this.rigidBody.setEnabled(value);
+    if (this.tree) {
+      this.tree.mesh.visible = value;
+      this.tree.rigidBody.setEnabled(value);
     }
+
+    this.gifts.forEach((gift) => {
+      gift.mesh.visible = value;
+      gift.rigidBody.setEnabled(value);
+    });
   }
 
   update(): void {
