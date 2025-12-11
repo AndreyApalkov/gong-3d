@@ -8,10 +8,16 @@ import type { RevoluteImpulseJoint } from "@dimforge/rapier3d";
 import { InteractionGroups } from "../constants/InteractionGroups";
 import RAPIER from "@dimforge/rapier3d";
 import { Textures } from "../sources";
+import eventsManager, { EventsManager } from "../Utils/EventsManager";
+
+export enum GongEvent {
+  Hit = "gong:hit",
+}
 
 export default class Gong extends Entity {
   private children: PhysicalEntity[] = [];
-  private resources: Resources;
+  private readonly resources: Resources;
+  private readonly eventsManager: EventsManager = eventsManager;
   private baulkColorTexture?: THREE.Texture;
   private baulkNormalTexture?: THREE.Texture;
   private plateColorTexture?: THREE.Texture;
@@ -40,6 +46,7 @@ export default class Gong extends Entity {
     this.physicalWorld.eventQueue.drainContactForceEvents((event) => {
       const force = event.maxForceMagnitude();
       if (force > 200) {
+        this.eventsManager.emit(GongEvent.Hit);
         this.playSound(force);
       }
     });
