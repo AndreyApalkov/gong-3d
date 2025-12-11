@@ -9,6 +9,7 @@ export class NewYearTheme extends WinterTheme implements Theme {
   apply(): void {
     super.apply();
     this.world?.christmasTree?.setVisible(true);
+    this.environment?.setTimeOfDay("night");
   }
 
   discard(): void {

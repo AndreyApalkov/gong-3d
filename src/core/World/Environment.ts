@@ -8,7 +8,15 @@ import { Snow } from "../Snow";
 import Resources from "../Utils/Resources";
 import { Textures } from "../sources";
 
+export type TimeOfDay = "morning" | "day" | "evening" | "night";
+
 export default class Environment {
+  private readonly times = {
+    morning: THREE.MathUtils.degToRad(80),
+    day: THREE.MathUtils.degToRad(-20),
+    evening: THREE.MathUtils.degToRad(275),
+    night: THREE.MathUtils.degToRad(180),
+  };
   private readonly experience: Experience;
   private readonly scene: THREE.Scene;
   private readonly time: Time;
@@ -150,5 +158,9 @@ export default class Environment {
 
   toggleSnow(visible: boolean): void {
     this.snow.visible = visible;
+  }
+
+  setTimeOfDay(time: TimeOfDay): void {
+    this.phi = this.times[time];
   }
 }

@@ -23,6 +23,7 @@ export class WinterTheme implements Theme {
       Textures.SnowFloorAO,
     ]);
     this.environment?.toggleSnow(true);
+    this.environment?.setTimeOfDay("morning");
   }
 
   discard(): void {
