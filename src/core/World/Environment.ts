@@ -78,7 +78,7 @@ export default class Environment {
       0.5,
       1,
     );
-    this.spotLight.position.set(0, 15, 3);
+    this.spotLight.position.set(0, 19, 6);
     this.spotLight.castShadow = true;
     this.spotLight.shadow.mapSize.width = 512;
     this.spotLight.shadow.mapSize.height = 512;
