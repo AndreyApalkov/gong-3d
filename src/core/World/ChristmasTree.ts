@@ -1,4 +1,4 @@
-const { ActiveEvents } = await import("@dimforge/rapier3d");
+import { ActiveEvents, type TempContactForceEvent } from "@dimforge/rapier3d";
 import * as THREE from "three";
 import { GLTF } from "three/examples/jsm/Addons.js";
 import Experience from "../Experience";
@@ -6,7 +6,6 @@ import Resources from "../Utils/Resources";
 import { Models } from "../sources";
 import PhysicalEntity from "../models/PhysicalEntity";
 import { CollisionManager } from "../CollisionManager";
-import type { TempContactForceEvent } from "@dimforge/rapier3d";
 
 export class ChristmasTree {
   private readonly resources: Resources;

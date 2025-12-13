@@ -4,12 +4,12 @@ import PhysicalEntity from "../models/PhysicalEntity";
 import Resources from "../Utils/Resources";
 import Experience from "../Experience";
 import PhysicalWorld from "../PhysicalWorld";
-import type {
-  RevoluteImpulseJoint,
-  TempContactForceEvent,
+import {
+  ActiveEvents,
+  type RevoluteImpulseJoint,
+  type TempContactForceEvent,
 } from "@dimforge/rapier3d";
 import { InteractionGroups } from "../constants/InteractionGroups";
-import RAPIER from "@dimforge/rapier3d";
 import { Textures } from "../sources";
 import eventsManager, { EventsManager } from "../Utils/EventsManager";
 import { CollisionManager } from "../CollisionManager";
@@ -153,7 +153,7 @@ export default class Gong extends Entity {
         mesh,
       });
 
-      column.collider.setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS);
+      column.collider.setActiveEvents(ActiveEvents.CONTACT_FORCE_EVENTS);
 
       this.collisionManager.registerContactForceHandler(
         column.collider.handle,
@@ -196,7 +196,7 @@ export default class Gong extends Entity {
       collisionGroups: InteractionGroups.DYNAMIC_OBJECT,
       damping: 0.2,
     });
-    plate.collider.setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS);
+    plate.collider.setActiveEvents(ActiveEvents.CONTACT_FORCE_EVENTS);
 
     this.collisionManager.registerContactForceHandler(
       plate.collider.handle,
