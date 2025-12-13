@@ -4,11 +4,15 @@ import PhysicalEntity from "../models/PhysicalEntity";
 import Resources from "../Utils/Resources";
 import Experience from "../Experience";
 import PhysicalWorld from "../PhysicalWorld";
-import type { RevoluteImpulseJoint } from "@dimforge/rapier3d";
+import type {
+  RevoluteImpulseJoint,
+  TempContactForceEvent,
+} from "@dimforge/rapier3d";
 import { InteractionGroups } from "../constants/InteractionGroups";
 import RAPIER from "@dimforge/rapier3d";
 import { Textures } from "../sources";
 import eventsManager, { EventsManager } from "../Utils/EventsManager";
+import { CollisionManager } from "../CollisionManager";
 
 export enum GongEvent {
   Hit = "gong:hit",
@@ -18,6 +22,7 @@ export default class Gong extends Entity {
   private children: PhysicalEntity[] = [];
   private readonly resources: Resources;
   private readonly eventsManager: EventsManager = eventsManager;
+  private readonly collisionManager: CollisionManager;
   private baulkColorTexture?: THREE.Texture;
   private baulkNormalTexture?: THREE.Texture;
   private plateColorTexture?: THREE.Texture;
@@ -28,7 +33,8 @@ export default class Gong extends Entity {
   private logoTexture?: THREE.Texture;
   private physicalWorld: PhysicalWorld;
   private gongPlate?: PhysicalEntity;
-  private hitSound: HTMLAudioElement = new Audio("sound/gong-sound.mp3");
+  private gongHitSound: HTMLAudioElement = new Audio("sound/gong-sound.mp3");
+  private woodHitSound: HTMLAudioElement = new Audio("sound/hit-by-a-wood.mp3");
 
   constructor() {
     super();
@@ -36,20 +42,13 @@ export default class Gong extends Entity {
     const experience = new Experience();
     this.resources = experience.resources;
     this.physicalWorld = experience.physicalWorld;
+    this.collisionManager = experience.collisionManager;
 
     this.init();
   }
 
   update(): void {
     this.children.forEach((child) => child.update());
-
-    this.physicalWorld.eventQueue.drainContactForceEvents((event) => {
-      const force = event.maxForceMagnitude();
-      if (force > 200) {
-        this.eventsManager.emit(GongEvent.Hit);
-        this.playSound(force);
-      }
-    });
   }
 
   private getTextures(): void {
@@ -154,6 +153,13 @@ export default class Gong extends Entity {
         mesh,
       });
 
+      column.collider.setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS);
+
+      this.collisionManager.registerContactForceHandler(
+        column.collider.handle,
+        this.woodHitHandler,
+      );
+
       this.children.push(column);
     });
   }
@@ -191,6 +197,11 @@ export default class Gong extends Entity {
       damping: 0.2,
     });
     plate.collider.setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS);
+
+    this.collisionManager.registerContactForceHandler(
+      plate.collider.handle,
+      this.gongHitHandler,
+    );
 
     const baulkRigidBody = this.children[2]?.rigidBody; // get baulk by index
     if (plate.rigidBody && baulkRigidBody) {
@@ -237,8 +248,25 @@ export default class Gong extends Entity {
 
   private playSound(force: number): void {
     const volume = Math.min(force / 1000, 1);
-    this.hitSound.currentTime = 0;
-    this.hitSound.volume = volume;
-    this.hitSound.play();
+    this.gongHitSound.currentTime = 0;
+    this.gongHitSound.volume = volume;
+    this.gongHitSound.play();
   }
+
+  private gongHitHandler = (event: TempContactForceEvent): void => {
+    const force = event.maxForceMagnitude();
+    if (force > 200) {
+      this.eventsManager.emit(GongEvent.Hit);
+      this.playSound(force);
+    }
+  };
+
+  private woodHitHandler = (event: TempContactForceEvent): void => {
+    const force = event.maxForceMagnitude();
+    if (force > 200) {
+      this.woodHitSound.currentTime = 0;
+      this.woodHitSound.volume = Math.min(force / 1000, 1);
+      this.woodHitSound.play();
+    }
+  };
 }

@@ -1,20 +1,35 @@
+const { ActiveEvents } = await import("@dimforge/rapier3d");
 import * as THREE from "three";
 import { GLTF } from "three/examples/jsm/Addons.js";
 import Experience from "../Experience";
 import Resources from "../Utils/Resources";
 import { Models } from "../sources";
 import PhysicalEntity from "../models/PhysicalEntity";
+import { CollisionManager } from "../CollisionManager";
+import type { TempContactForceEvent } from "@dimforge/rapier3d";
 
 export class ChristmasTree {
   private readonly resources: Resources;
+  private readonly collisionManager: CollisionManager;
   private model?: GLTF;
   private gifts: PhysicalEntity[] = [];
   private tree?: PhysicalEntity;
+  private readonly giftHitSounds: HTMLAudioElement[] = [
+    new Audio("sound/stick-hitting.mp3"),
+    new Audio("sound/pillow-hit.mp3"),
+    new Audio("sound/loud-thud.mp3"),
+  ];
+  private readonly treeHitSounds: HTMLAudioElement[] = [
+    new Audio("sound/hit-tree-02.mp3"),
+    new Audio("sound/hit-tree-03.mp3"),
+    new Audio("sound/glass-breaking-sound-effect.mp3"),
+  ];
 
   constructor(private position: THREE.Vector3 = new THREE.Vector3(0, 0, 0)) {
     const experience = new Experience();
 
     this.resources = experience.resources;
+    this.collisionManager = experience.collisionManager;
     this.setup();
   }
 
@@ -66,6 +81,13 @@ export class ChristmasTree {
         density: 100,
         mesh: group,
       });
+
+      this.tree?.collider.setActiveEvents(ActiveEvents.CONTACT_FORCE_EVENTS);
+
+      this.collisionManager.registerContactForceHandler(
+        this.tree.collider.handle,
+        this.handleTreeCollision,
+      );
     }
   }
 
@@ -110,6 +132,14 @@ export class ChristmasTree {
       friction: 0.7,
       density: 1,
     });
+
+    gift.collider.setActiveEvents(ActiveEvents.CONTACT_FORCE_EVENTS);
+
+    this.collisionManager.registerContactForceHandler(
+      gift.collider.handle,
+      this.handleGiftCollision,
+    );
+
     this.gifts.push(gift);
   }
 
@@ -129,4 +159,31 @@ export class ChristmasTree {
     this.gifts.forEach((gift) => gift.update());
     this.tree?.update();
   }
+
+  private handleGiftCollision = (event: TempContactForceEvent): void => {
+    const force = event.maxForceMagnitude();
+    if (force < 150) return;
+
+    const randomIndex = Math.floor(Math.random() * this.giftHitSounds.length);
+    const randomSound: HTMLAudioElement = this.giftHitSounds[randomIndex];
+
+    const volume = Math.min(0.1 + force / 500, 0.5);
+    randomSound.volume = volume;
+    randomSound.currentTime = 0;
+    randomSound.play();
+  };
+
+  private handleTreeCollision = (event: TempContactForceEvent): void => {
+    const force = event.maxForceMagnitude();
+    if (force < 450) return;
+
+    const randomIndex = Math.floor(Math.random() * this.treeHitSounds.length);
+    const randomSound: HTMLAudioElement = this.treeHitSounds[randomIndex];
+
+    if (randomSound.paused === false) return;
+
+    randomSound.volume = Math.min(0.2 + force / 1000, 0.7);
+    randomSound.currentTime = 0;
+    randomSound.play();
+  };
 }

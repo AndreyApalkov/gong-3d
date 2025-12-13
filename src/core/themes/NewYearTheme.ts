@@ -29,7 +29,6 @@ export class NewYearTheme extends WinterTheme implements Theme {
   }
 
   private playSound(): void {
-    this.sound.loop = true;
     this.sound.volume = 1;
     this.sound.play();
   }
