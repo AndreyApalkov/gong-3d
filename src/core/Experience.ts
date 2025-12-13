@@ -13,6 +13,7 @@ import Player from "./World/Player";
 import PlayerInputHandler from "./PlayerInputHandler";
 import { modelsToPreload, texturesToPreload } from "./sources";
 import { ThemeManager } from "./ThemeManager";
+import { CollisionManager } from "./CollisionManager";
 
 let instance: Experience;
 
@@ -26,6 +27,7 @@ export default class Experience {
   public readonly camera!: Camera;
   public readonly renderer!: Renderer;
   public readonly physicalWorld!: PhysicalWorld;
+  public readonly collisionManager!: CollisionManager;
   private readonly eventsManager: EventsManager = eventsManager;
   private player?: Player;
   public world?: World;
@@ -52,6 +54,7 @@ export default class Experience {
     this.camera = new Camera();
     this.renderer = new Renderer();
     this.physicalWorld = new PhysicalWorld();
+    this.collisionManager = new CollisionManager();
 
     // this.scene.fog = new THREE.Fog(0xf9efa9, 0, 200);
     this.resources.loadModels(modelsToPreload);
@@ -115,6 +118,7 @@ export default class Experience {
       this.stats?.begin();
     }
     this.physicalWorld.update();
+    this.collisionManager.checkCollisions();
     // this.camera.update();
     this.world?.update();
     this.player?.update();
