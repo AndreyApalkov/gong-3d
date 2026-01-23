@@ -26,6 +26,7 @@ export enum Models {
   Arms = "models/arms.glb",
   Mallet = "models/mallet.glb",
   ChristmasTree = "models/christmas_tree.glb",
+  Gramphone = "models/gramophone.glb",
 }
 
 export const texturesToPreload: string[] = [
@@ -56,4 +57,5 @@ export const modelsToPreload: string[] = [
   Models.Arms,
   Models.Mallet,
   Models.ChristmasTree,
+  Models.Gramphone,
 ];
