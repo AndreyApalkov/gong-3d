@@ -29,6 +29,10 @@ export enum Models {
   Gramphone = "models/gramophone.glb",
 }
 
+export enum SoundAsset {
+  song = "sound/Mentallica.mp3",
+}
+
 export const texturesToPreload: string[] = [
   Textures.Snowflake,
   Textures.EnvironmentNight,
@@ -59,3 +63,5 @@ export const modelsToPreload: string[] = [
   Models.ChristmasTree,
   Models.Gramphone,
 ];
+
+export const soundsToPreload: SoundAsset[] = [SoundAsset.song];
