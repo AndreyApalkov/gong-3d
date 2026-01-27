@@ -11,7 +11,7 @@ import eventsManager, { EventsManager } from "./Utils/EventsManager";
 import PhysicalWorld from "./PhysicalWorld";
 import Player from "./World/Player";
 import PlayerInputHandler from "./PlayerInputHandler";
-import { modelsToPreload, texturesToPreload } from "./sources";
+import { modelsToPreload, soundsToPreload, texturesToPreload } from "./sources";
 import { ThemeManager } from "./ThemeManager";
 import { CollisionManager } from "./CollisionManager";
 
@@ -25,6 +25,7 @@ export default class Experience {
   public readonly scene!: THREE.Scene;
   public readonly resources!: Resources;
   public readonly camera!: Camera;
+  public readonly audioListener = new THREE.AudioListener();
   public readonly renderer!: Renderer;
   public readonly physicalWorld!: PhysicalWorld;
   public readonly collisionManager!: CollisionManager;
@@ -52,6 +53,7 @@ export default class Experience {
     this.scene = new THREE.Scene();
     this.resources = new Resources();
     this.camera = new Camera();
+    this.camera.instance.add(this.audioListener);
     this.renderer = new Renderer();
     this.physicalWorld = new PhysicalWorld();
     this.collisionManager = new CollisionManager();
@@ -59,6 +61,7 @@ export default class Experience {
     // this.scene.fog = new THREE.Fog(0xf9efa9, 0, 200);
     this.resources.loadModels(modelsToPreload);
     this.resources.loadTextures(texturesToPreload);
+    this.resources.loadAudios(soundsToPreload);
 
     // Sizes resize event
     this.eventsManager.on(SizesEvent.Resize, () => {
