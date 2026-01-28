@@ -7,7 +7,6 @@ import {
   Object3DEventMap,
   PositionalAudio,
   Vector3,
-  AudioListener,
 } from "three";
 import Experience from "../Experience";
 import Resources from "../Utils/Resources";
@@ -17,24 +16,30 @@ import PhysicalEntity from "../models/PhysicalEntity";
 import Time from "../Utils/Time";
 import eventsManager, { EventsManager } from "../Utils/EventsManager";
 import { GongEvent } from "./Gong";
+import { AudioManager } from "../Utils/AudioManager";
+import { ActiveEvents, type TempContactForceEvent } from "@dimforge/rapier3d";
+import { CollisionManager } from "../CollisionManager";
 
 export class Gramophone {
   private readonly eventsManager: EventsManager = eventsManager;
   private readonly resources: Resources;
   private readonly time: Time;
+  private readonly audioManager: AudioManager;
+  private readonly collisionManager: CollisionManager;
   private model?: GLTF;
   private gramophone?: PhysicalEntity;
   private animationMixer?: AnimationMixer;
   private animation?: AnimationAction;
-  private audioListener: AudioListener;
-  private songAudio?: PositionalAudio;
+  private song?: PositionalAudio;
+  private hitSounds: PositionalAudio[] = [];
 
   constructor(private position: Vector3 = new Vector3(0, 0, 0)) {
     const experience = new Experience();
 
     this.resources = experience.resources;
     this.time = experience.time;
-    this.audioListener = experience.audioListener;
+    this.audioManager = experience.audioManager;
+    this.collisionManager = experience.collisionManager;
 
     this.setupModel();
     this.setupAudio();
@@ -80,38 +85,56 @@ export class Gramophone {
         density: 1,
         mesh: group,
       });
+
+      this.gramophone.collider.setActiveEvents(
+        ActiveEvents.CONTACT_FORCE_EVENTS,
+      );
+
+      this.collisionManager.registerContactForceHandler(
+        this.gramophone.collider.handle,
+        this.handleGramophoneCollision,
+      );
     }
   }
 
   private async setupAudio(): Promise<void> {
-    const audioBuffer = await this.resources.getAudio(SoundAsset.song);
+    this.hitSounds = await this.audioManager.createPositionalAudios([
+      SoundAsset.MetalHit1,
+      SoundAsset.MetalHit2,
+      SoundAsset.MetalHit3,
+    ]);
 
-    if (audioBuffer) {
-      this.songAudio = this.createAudio(audioBuffer);
+    this.song = await this.audioManager.createPositionalAudio(
+      SoundAsset.MentallicaSong,
+    );
+
+    if (this.song) {
+      this.gramophone?.mesh.add(this.song);
       this.eventsManager.on(GongEvent.Hit, this.playSong);
     }
-  }
-
-  private createAudio(buffer: AudioBuffer): PositionalAudio {
-    const audio = new PositionalAudio(this.audioListener);
-
-    audio.setBuffer(buffer);
-    audio.setRefDistance(10);
-    audio.setMaxDistance(150);
-
-    this.gramophone?.mesh.add(audio);
-
-    return audio;
   }
 
   private playSong = (): void => {
     this.animation?.play();
 
-    if (this.songAudio) {
-      this.songAudio.play();
-      this.songAudio.onEnded = () => {
+    if (this.song) {
+      this.song.play();
+      this.song.onEnded = () => {
         this.animation?.stop();
       };
     }
+  };
+
+  private handleGramophoneCollision = (event: TempContactForceEvent): void => {
+    const force = event.maxForceMagnitude();
+    if (force < 250) return;
+
+    const randomIndex = Math.floor(Math.random() * this.hitSounds.length);
+    const randomSound: PositionalAudio = this.hitSounds[randomIndex];
+
+    if (randomSound.isPlaying) return;
+
+    randomSound.setVolume(Math.min(0.2 + force / 1000, 0.7));
+    randomSound.play();
   };
 }

@@ -14,6 +14,7 @@ import PlayerInputHandler from "./PlayerInputHandler";
 import { modelsToPreload, soundsToPreload, texturesToPreload } from "./sources";
 import { ThemeManager } from "./ThemeManager";
 import { CollisionManager } from "./CollisionManager";
+import { AudioManager } from "./Utils/AudioManager";
 
 let instance: Experience;
 
@@ -30,6 +31,7 @@ export default class Experience {
   public readonly physicalWorld!: PhysicalWorld;
   public readonly collisionManager!: CollisionManager;
   private readonly eventsManager: EventsManager = eventsManager;
+  public readonly audioManager!: AudioManager;
   private player?: Player;
   public world?: World;
 
@@ -57,6 +59,7 @@ export default class Experience {
     this.renderer = new Renderer();
     this.physicalWorld = new PhysicalWorld();
     this.collisionManager = new CollisionManager();
+    this.audioManager = new AudioManager();
 
     // this.scene.fog = new THREE.Fog(0xf9efa9, 0, 200);
     this.resources.loadModels(modelsToPreload);
