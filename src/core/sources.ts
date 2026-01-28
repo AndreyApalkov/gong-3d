@@ -30,7 +30,10 @@ export enum Models {
 }
 
 export enum SoundAsset {
-  song = "sound/Mentallica.mp3",
+  MentallicaSong = "sound/Mentallica.mp3",
+  MetalHit1 = "sound/metal-hit-1.mp3",
+  MetalHit2 = "sound/metal-hit-2.mp3",
+  MetalHit3 = "sound/metal-hit-3.mp3",
 }
 
 export const texturesToPreload: string[] = [
@@ -64,4 +67,9 @@ export const modelsToPreload: string[] = [
   Models.Gramphone,
 ];
 
-export const soundsToPreload: SoundAsset[] = [SoundAsset.song];
+export const soundsToPreload: SoundAsset[] = [
+  SoundAsset.MentallicaSong,
+  SoundAsset.MetalHit1,
+  SoundAsset.MetalHit2,
+  SoundAsset.MetalHit3,
+];
