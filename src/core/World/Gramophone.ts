@@ -19,6 +19,7 @@ import { GongEvent } from "./Gong";
 import { AudioManager } from "../Utils/AudioManager";
 import { ActiveEvents, type TempContactForceEvent } from "@dimforge/rapier3d";
 import { CollisionManager } from "../CollisionManager";
+import Debug from "../Utils/Debug";
 
 export class Gramophone {
   private readonly eventsManager: EventsManager = eventsManager;
@@ -26,12 +27,14 @@ export class Gramophone {
   private readonly time: Time;
   private readonly audioManager: AudioManager;
   private readonly collisionManager: CollisionManager;
+  private readonly debug: Debug;
   private model?: GLTF;
   private gramophone?: PhysicalEntity;
   private animationMixer?: AnimationMixer;
   private animation?: AnimationAction;
   private song?: PositionalAudio;
   private hitSounds: PositionalAudio[] = [];
+  private fileInput!: HTMLInputElement;
 
   constructor(private position: Vector3 = new Vector3(0, 0, 0)) {
     const experience = new Experience();
@@ -40,9 +43,15 @@ export class Gramophone {
     this.time = experience.time;
     this.audioManager = experience.audioManager;
     this.collisionManager = experience.collisionManager;
+    this.debug = experience.debug;
 
     this.setupModel();
     this.setupAudio();
+    this.createAudioInput();
+
+    if (this.debug.active) {
+      this.setDebug();
+    }
   }
 
   update(): void {
@@ -98,13 +107,14 @@ export class Gramophone {
   }
 
   private async setupAudio(): Promise<void> {
-    this.hitSounds = await this.audioManager.createPositionalAudios([
-      SoundAsset.MetalHit1,
-      SoundAsset.MetalHit2,
-      SoundAsset.MetalHit3,
-    ]);
+    this.hitSounds =
+      await this.audioManager.createPositionalAudiosBySoundAssets([
+        SoundAsset.MetalHit1,
+        SoundAsset.MetalHit2,
+        SoundAsset.MetalHit3,
+      ]);
 
-    this.song = await this.audioManager.createPositionalAudio(
+    this.song = await this.audioManager.createPositionalAudioBySoundAsset(
       SoundAsset.MentallicaSong,
     );
 
@@ -137,4 +147,35 @@ export class Gramophone {
     randomSound.setVolume(Math.min(0.2 + force / 1000, 0.7));
     randomSound.play();
   };
+
+  private setDebug(): void {
+    const folder = this.debug.ui?.addFolder("Gramophone");
+
+    folder?.add(this, "loadSong").name("Load Song");
+  }
+
+  private loadSong = async (): Promise<void> => {
+    this.fileInput.click();
+  };
+
+  private createAudioInput(): void {
+    this.fileInput = document.createElement("input");
+    this.fileInput.type = "file";
+    this.fileInput.accept = "audio/*";
+    this.fileInput.style.display = "none";
+    document.body.appendChild(this.fileInput);
+
+    this.fileInput.addEventListener("change", async () => {
+      const file = this.fileInput.files?.[0];
+      if (!file) return;
+
+      const arrayBuffer = await file.arrayBuffer();
+
+      this.song?.stop();
+      this.song =
+        await this.audioManager.createPositionalAudioFromBuffer(arrayBuffer);
+      this.song?.setVolume(1);
+      this.song?.setRefDistance(30);
+    });
+  }
 }
