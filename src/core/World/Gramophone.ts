@@ -154,7 +154,7 @@ export class Gramophone {
     folder?.add(this, "loadSong").name("Load Song");
   }
 
-  private loadSong = async (): Promise<void> => {
+  protected loadSong = async (): Promise<void> => {
     this.fileInput.click();
   };
 
