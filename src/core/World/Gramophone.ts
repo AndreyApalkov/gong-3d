@@ -35,6 +35,7 @@ export class Gramophone {
   private song?: PositionalAudio;
   private hitSounds: PositionalAudio[] = [];
   private fileInput!: HTMLInputElement;
+  private volume: number = 1;
 
   constructor(private position: Vector3 = new Vector3(0, 0, 0)) {
     const experience = new Experience();
@@ -135,6 +136,20 @@ export class Gramophone {
     }
   };
 
+  protected stopSong = (): void => {
+    this.song?.stop();
+  };
+
+  protected pauseSong = (): void => {
+    this.song?.pause();
+  };
+
+  protected setVolume = (volume: number): void => {
+    if (this.song) {
+      this.song.setVolume(volume);
+    }
+  };
+
   private handleGramophoneCollision = (event: TempContactForceEvent): void => {
     const force = event.maxForceMagnitude();
     if (force < 250) return;
@@ -151,7 +166,13 @@ export class Gramophone {
   private setDebug(): void {
     const folder = this.debug.ui?.addFolder("Gramophone");
 
-    folder?.add(this, "loadSong").name("Load Song");
+    folder?.add(this, "loadSong").name("Load Song from File");
+    folder?.add(this, "stopSong").name("Stop Song");
+    folder?.add(this, "pauseSong").name("Pause Song");
+    folder?.add(this, "playSong").name("Play Song");
+    folder?.add(this, "volume", 0, 2, 0.01).onChange((value: number) => {
+      this.setVolume(value);
+    });
   }
 
   protected loadSong = async (): Promise<void> => {
@@ -174,7 +195,7 @@ export class Gramophone {
       this.song?.stop();
       this.song =
         await this.audioManager.createPositionalAudioFromBuffer(arrayBuffer);
-      this.song?.setVolume(1);
+      this.song?.setVolume(this.volume);
       this.song?.setRefDistance(30);
     });
   }
