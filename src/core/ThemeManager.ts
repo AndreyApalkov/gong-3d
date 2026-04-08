@@ -21,7 +21,7 @@ export class ThemeManager {
     [ThemeName.NewYear]: new NewYearTheme(),
     [ThemeName.Winter]: new WinterTheme(),
   };
-  public currentThemeName: ThemeName = ThemeName.Winter;
+  public currentThemeName: ThemeName = ThemeName.Default;
   private currentTheme?: Theme;
 
   constructor(private debug: Debug = new Experience().debug) {
