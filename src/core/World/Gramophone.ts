@@ -195,8 +195,11 @@ export class Gramophone {
       this.song?.stop();
       this.song =
         await this.audioManager.createPositionalAudioFromBuffer(arrayBuffer);
-      this.song?.setVolume(this.volume);
-      this.song?.setRefDistance(30);
+      if (this.song) {
+        this.song.setVolume(this.volume);
+        this.song.setRefDistance(30);
+        this.gramophone?.mesh.add(this.song);
+      }
     });
   }
 }
