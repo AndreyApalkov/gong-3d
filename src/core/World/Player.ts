@@ -168,7 +168,7 @@ export default class Player {
   }
 
   private setCharacterController(): void {
-    let offset = 0.01;
+    let offset = 0.0001;
     this.characterController =
       this.physicalWorld.instance.createCharacterController(offset);
     this.characterController.enableSnapToGround(0.5);
@@ -186,7 +186,7 @@ export default class Player {
       }),
     );
     this.body = new PhysicalEntity({
-      shape: { type: "box", sizes: { x: 1, y: this.height, z: 1 } },
+      shape: { type: "capsule", radius: 0.5, height: this.height },
       density: 100,
       rigidBodyType: "dynamic",
       collisionGroups: InteractionGroups.PLAYER,

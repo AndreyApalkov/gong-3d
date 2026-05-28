@@ -47,8 +47,20 @@ interface ConeShape {
   height: number;
 }
 
+interface Capsule {
+  type: "capsule";
+  radius: number;
+  height: number;
+}
+
 interface ColliderParams {
-  shape: BoxShape | SphereShape | CylinderShape | TrimeshShape | ConeShape;
+  shape:
+    | BoxShape
+    | SphereShape
+    | CylinderShape
+    | TrimeshShape
+    | ConeShape
+    | Capsule;
   density?: number;
   restitution?: number;
   collisionGroups?: number;
@@ -213,6 +225,14 @@ export default class PhysicalWorld {
           shape.indices,
         );
         break;
+
+      case "capsule":
+        colliderDesc = RAPIER.ColliderDesc.capsule(
+          shape.height / 2,
+          shape.radius,
+        );
+        break;
+
       case "cone":
         colliderDesc = RAPIER.ColliderDesc.cone(shape.height / 2, shape.radius);
         break;
