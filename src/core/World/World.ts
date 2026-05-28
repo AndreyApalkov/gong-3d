@@ -3,6 +3,7 @@ import Entity from "../models/Entity";
 import { ChristmasTree } from "./ChristmasTree";
 import Environment from "./Environment";
 import Floor from "./Floor";
+import Water from "./Water";
 
 import Gong from "./Gong";
 import { Gramophone } from "./Gramophone";
@@ -12,6 +13,7 @@ export default class World {
 
   public environment?: Environment;
   public floor?: Floor;
+  public water?: Water;
   public christmasTree?: ChristmasTree;
   public gramophone?: Gramophone;
 
@@ -23,6 +25,7 @@ export default class World {
     this.christmasTree?.update();
     this.gramophone?.update();
     this.environment?.update();
+    this.water?.update();
 
     this.objects.forEach((object) => object.update());
   }
@@ -34,8 +37,9 @@ export default class World {
   private setup(): void {
     this.environment = new Environment();
     this.floor = new Floor();
+    this.water = new Water();
     this.christmasTree = new ChristmasTree(new THREE.Vector3(-8, 0, 2));
-    this.gramophone = new Gramophone(new THREE.Vector3(8, 0, 2));
+    this.gramophone = new Gramophone(new THREE.Vector3(8, 3, 2));
     this.christmasTree.setVisible(false);
 
     this.objects = [new Gong()];

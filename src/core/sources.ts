@@ -20,6 +20,7 @@ export enum Textures {
   GongPlateAO = "textures/gong-plate-7/ambientOcclusion.jpg",
   Logo = "textures/logo/casechek-logo.png",
   NightSky = "textures/environment/stars_milky_way_8k.jpg",
+  WaterNormals = "textures/water/waternormals.jpg",
 }
 
 export enum Models {
@@ -58,6 +59,7 @@ export const texturesToPreload: string[] = [
   Textures.GongPlateAO,
   Textures.Logo,
   Textures.NightSky,
+  Textures.WaterNormals,
 ];
 
 export const modelsToPreload: string[] = [
