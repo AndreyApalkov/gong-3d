@@ -6,9 +6,9 @@ export default class Floor {
   private readonly experience: Experience;
   private readonly scene: THREE.Scene;
   private readonly resources: Resources;
-  private readonly size = 200;
-  private readonly subdivisions = 512;
-  private readonly textureRepeat = 10;
+  private readonly size = 500;
+  private readonly subdivisions = 1028;
+  private readonly textureRepeat = 25;
 
   private readonly islandLandRadius = 55;
   private readonly islandShoreRadius = 78;
