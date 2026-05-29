@@ -43,7 +43,7 @@ export default class World {
     this.water = new Water();
     this.christmasTree = new ChristmasTree(new THREE.Vector3(-8, 0, 2));
     this.gramophone = new Gramophone(new THREE.Vector3(8, 3, 2));
-    this.palm = new Palm(new THREE.Vector3(-12, 0, -10));
+    this.palm = new Palm(new THREE.Vector3(-12, 0, 2));
     this.christmasTree.setVisible(false);
     this.palm.setVisible(false);
 
