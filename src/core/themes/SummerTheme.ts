@@ -28,11 +28,13 @@ export class SummerTheme implements Theme {
       Textures.SandFloorAO,
     ]);
     this.environment?.setTimeOfDay("day");
+    this.world?.palm?.setVisible(true);
     this.playAmbientSound();
     document.addEventListener("click", this.playAmbientSound, { once: true });
   }
 
   discard(): void {
+    this.world?.palm?.setVisible(false);
     this.stopAmbientSound();
     document.removeEventListener("click", this.playAmbientSound);
   }

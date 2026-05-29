@@ -28,6 +28,7 @@ export enum Models {
   Mallet = "models/mallet.glb",
   ChristmasTree = "models/christmas_tree.glb",
   Gramphone = "models/gramophone.glb",
+  Palm = "models/palm_dan.glb",
 }
 
 export enum SoundAsset {
@@ -67,6 +68,7 @@ export const modelsToPreload: string[] = [
   Models.Mallet,
   Models.ChristmasTree,
   Models.Gramphone,
+  Models.Palm,
 ];
 
 export const soundsToPreload: SoundAsset[] = [
