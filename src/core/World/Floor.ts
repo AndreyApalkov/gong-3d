@@ -6,8 +6,15 @@ export default class Floor {
   private readonly experience: Experience;
   private readonly scene: THREE.Scene;
   private readonly resources: Resources;
-  private readonly size = 200;
-  private readonly textureRepeat = 10;
+  private readonly size = 500;
+  private readonly subdivisions = 1028;
+  private readonly textureRepeat = 25;
+
+  private readonly islandLandRadius = 55;
+  private readonly islandShoreRadius = 78;
+  private readonly seabedY = -6;
+  private readonly displacementScale = 0.08;
+  private readonly displacementBias = -0.04;
 
   private geometry?: THREE.BufferGeometry;
   private colorTexture?: THREE.Texture;
@@ -23,19 +30,8 @@ export default class Floor {
     this.scene = this.experience.scene;
     this.resources = this.experience.resources;
 
-    this.setPhysicalBody();
-
     this.init();
-  }
-
-  private setPhysicalBody(): void {
-    const { rigidBody } = this.experience.physicalWorld.createObject({
-      shape: { type: "box", sizes: { x: this.size, y: 0.5, z: this.size } },
-      position: { x: 0, y: -0.5, z: 0 },
-      rigidBodyType: "fixed",
-    });
-    rigidBody.setTranslation({ x: 0, y: -0.25, z: 0 }, true);
-    // collider.setFriction(1);
+    this.setPhysicalBody();
   }
 
   private init(): void {
@@ -45,7 +41,40 @@ export default class Floor {
   }
 
   private setGeometry(): void {
-    this.geometry = new THREE.PlaneGeometry(this.size, this.size, 512, 512);
+    const geom = new THREE.PlaneGeometry(
+      this.size,
+      this.size,
+      this.subdivisions,
+      this.subdivisions,
+    );
+
+    const pos = geom.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const y = pos.getY(i);
+      pos.setZ(i, this.computeHeight(x, y));
+    }
+
+    geom.rotateX(-Math.PI / 2);
+    geom.computeVertexNormals();
+
+    this.geometry = geom;
+  }
+
+  private setPhysicalBody(): void {
+    if (!this.geometry || !this.geometry.index) return;
+
+    const vertices = new Float32Array(
+      (this.geometry.attributes.position as THREE.BufferAttribute).array,
+    );
+    const indices = new Uint32Array(this.geometry.index.array);
+
+    this.experience.physicalWorld.createObject({
+      shape: { type: "trimesh", vertices, indices },
+      position: { x: 0, y: 0, z: 0 },
+      rigidBodyType: "fixed",
+      friction: 1,
+    });
   }
 
   setTextures(texturePaths: string[]): void {
@@ -56,7 +85,6 @@ export default class Floor {
     this.aOTexture = this.resources.getTexture(texturePaths[4]);
 
     if (this.colorTexture) {
-      // this.colorTexture.colorSpace = THREE.SRGBColorSpace;
       this.colorTexture.repeat.set(this.textureRepeat, this.textureRepeat);
       this.colorTexture.wrapS = THREE.RepeatWrapping;
       this.colorTexture.wrapT = THREE.RepeatWrapping;
@@ -102,8 +130,9 @@ export default class Floor {
       map: this.colorTexture,
       normalMap: this.normalTexture,
       displacementMap: this.displacementTexture,
+      displacementScale: this.displacementScale,
+      displacementBias: this.displacementBias,
       side: THREE.DoubleSide,
-      displacementBias: -0.5,
       roughnessMap: this.roughnessTexture,
       aoMap: this.aOTexture,
     });
@@ -111,8 +140,24 @@ export default class Floor {
 
   private setMesh(): void {
     this.mesh = new THREE.Mesh(this.geometry, this.material);
-    this.mesh.rotation.x = -Math.PI * 0.5;
     this.mesh.receiveShadow = true;
     this.scene.add(this.mesh);
+  }
+
+  private computeHeight(x: number, y: number): number {
+    const r = Math.sqrt(x * x + y * y);
+
+    if (r <= this.islandLandRadius) return 0;
+    if (r >= this.islandShoreRadius) return this.seabedY;
+
+    const t =
+      (r - this.islandLandRadius) /
+      (this.islandShoreRadius - this.islandLandRadius);
+
+    return THREE.MathUtils.lerp(
+      0,
+      this.seabedY,
+      THREE.MathUtils.smoothstep(t, 0, 1),
+    );
   }
 }

@@ -168,7 +168,7 @@ export default class Player {
   }
 
   private setCharacterController(): void {
-    let offset = 0.01;
+    let offset = 0.0001;
     this.characterController =
       this.physicalWorld.instance.createCharacterController(offset);
     this.characterController.enableSnapToGround(0.5);
@@ -178,7 +178,7 @@ export default class Player {
 
   private setPhysicalBody(): void {
     const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(1, this.height, 1),
+      new THREE.BoxGeometry(2, this.height, 2),
       new THREE.MeshStandardMaterial({
         color: "#00f",
         opacity: 0,
@@ -186,7 +186,7 @@ export default class Player {
       }),
     );
     this.body = new PhysicalEntity({
-      shape: { type: "box", sizes: { x: 1, y: this.height, z: 1 } },
+      shape: { type: "capsule", radius: 0.5, height: this.height },
       density: 100,
       rigidBodyType: "dynamic",
       collisionGroups: InteractionGroups.PLAYER,

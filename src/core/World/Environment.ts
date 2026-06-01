@@ -32,6 +32,12 @@ export default class Environment {
   private theta = THREE.MathUtils.degToRad(50);
   private timeScale = 1;
 
+  public readonly sunDirection = new THREE.Vector3().setFromSphericalCoords(
+    1,
+    THREE.MathUtils.degToRad(80),
+    THREE.MathUtils.degToRad(50),
+  );
+
   constructor() {
     this.experience = new Experience();
     this.scene = this.experience.scene;
@@ -139,6 +145,7 @@ export default class Environment {
       this.phi,
       this.theta,
     );
+    this.sunDirection.copy(sunPosition);
     this.sunLight.position.copy(sunPosition.clone().multiplyScalar(50));
     const sunLightIntensity = THREE.MathUtils.smoothstep(sunCosine, -0.2, 0.1);
     const ambientIntensity = Math.max(0.5 * sunLightIntensity, 0.1);
