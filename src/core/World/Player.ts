@@ -178,7 +178,7 @@ export default class Player {
 
   private setPhysicalBody(): void {
     const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(1, this.height, 1),
+      new THREE.BoxGeometry(2, this.height, 2),
       new THREE.MeshStandardMaterial({
         color: "#00f",
         opacity: 0,

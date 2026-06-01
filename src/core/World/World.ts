@@ -4,7 +4,7 @@ import { ChristmasTree } from "./ChristmasTree";
 import Environment from "./Environment";
 import Floor from "./Floor";
 import { Palm } from "./Palm";
-import Water from "./Water";
+import Ocean from "./Ocean";
 
 import Gong from "./Gong";
 import { Gramophone } from "./Gramophone";
@@ -14,7 +14,7 @@ export default class World {
 
   public environment?: Environment;
   public floor?: Floor;
-  public water?: Water;
+  public water?: Ocean;
   public christmasTree?: ChristmasTree;
   public gramophone?: Gramophone;
   public palm?: Palm;
@@ -40,7 +40,7 @@ export default class World {
   private setup(): void {
     this.environment = new Environment();
     this.floor = new Floor();
-    this.water = new Water();
+    this.water = new Ocean();
     this.christmasTree = new ChristmasTree(new THREE.Vector3(-8, 0, 2));
     this.gramophone = new Gramophone(new THREE.Vector3(8, 3, 2));
     this.palm = new Palm(new THREE.Vector3(-12, 0, 2));

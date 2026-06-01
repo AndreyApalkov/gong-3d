@@ -5,15 +5,15 @@ import Resources from "../Utils/Resources";
 import Time from "../Utils/Time";
 import { Textures } from "../sources";
 
-export default class Water {
+export default class Ocean {
   private readonly experience: Experience;
   private readonly scene: THREE.Scene;
   private readonly resources: Resources;
   private readonly time: Time;
   private readonly size = 2000;
   private readonly level = -1.5;
-  private readonly opacity = 0.7;
-  private readonly intensity = 0.2;
+  private readonly opacity = 0.85;
+  private readonly flowIntensity = 0.5;
 
   private water!: WaterMesh;
 
@@ -43,13 +43,13 @@ export default class Water {
       waterNormals: normals,
       sunDirection,
       sunColor: 0xffffff,
-      waterColor: "#60c4f6",
+      waterColor: "#076cbe",
       distortionScale: 3.7,
       side: THREE.DoubleSide,
       alpha: this.opacity,
       fog: false,
     });
-    this.water.material.uniforms.size = new THREE.Uniform(0.7);
+    this.water.material.uniforms.size = new THREE.Uniform(5);
     this.water.material.transparent = true;
     this.water.rotation.x = -Math.PI / 2;
     this.water.position.y = this.level;
@@ -58,7 +58,7 @@ export default class Water {
 
   update(): void {
     const uniforms = this.water.material.uniforms;
-    uniforms.time.value += this.time.delta * this.intensity;
+    uniforms.time.value += this.time.delta * this.flowIntensity;
     const sun = this.experience.world?.environment?.sunDirection;
     if (sun) uniforms.sunDirection.value.copy(sun);
   }

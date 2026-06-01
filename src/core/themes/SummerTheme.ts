@@ -27,7 +27,7 @@ export class SummerTheme implements Theme {
       Textures.SandFloorRoughness,
       Textures.SandFloorAO,
     ]);
-    this.environment?.setTimeOfDay("day");
+    this.environment?.setTimeOfDay("morning");
     this.world?.palm?.setVisible(true);
     this.playAmbientSound();
     document.addEventListener("click", this.playAmbientSound, { once: true });
