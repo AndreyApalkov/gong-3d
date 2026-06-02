@@ -10,6 +10,7 @@ export default class Debug {
 
     if (this._active) {
       this._ui = new dat.GUI();
+      this._ui.close();
     }
   }
 
