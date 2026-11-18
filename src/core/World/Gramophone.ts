@@ -61,6 +61,12 @@ export class Gramophone {
     this.animationMixer?.update(this.time.delta);
   }
 
+  async setSong(soundAsset: SoundAsset): Promise<void> {
+    this.song?.stop();
+    this.song =
+      await this.audioManager.createPositionalAudioBySoundAsset(soundAsset);
+  }
+
   private setupModel(): void {
     this.model = this.resources.getModel(Models.Gramphone);
 
@@ -115,9 +121,7 @@ export class Gramophone {
         SoundAsset.MetalHit3,
       ]);
 
-    this.song = await this.audioManager.createPositionalAudioBySoundAsset(
-      SoundAsset.MentallicaSong,
-    );
+    await this.setSong(SoundAsset.MentallicaSong);
 
     if (this.song) {
       this.gramophone?.mesh.add(this.song);
