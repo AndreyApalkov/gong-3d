@@ -91,8 +91,6 @@ export default class Ocean {
       new THREE.PlaneGeometry(this.size, this.size),
       new THREE.MeshStandardMaterial({
         color: "#cfe6f2",
-        opacity: 0.95,
-        transparent: true,
         roughness: 0.15,
         metalness: 0.1,
         normalMap: normals ?? null,
