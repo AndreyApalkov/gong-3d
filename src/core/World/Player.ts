@@ -5,7 +5,7 @@ import Camera from "../Camera";
 import World from "./World";
 import PhysicalWorld from "../PhysicalWorld";
 import PhysicalEntity from "../models/PhysicalEntity";
-import { KinematicCharacterController } from "@dimforge/rapier3d";
+import { Collider, KinematicCharacterController } from "@dimforge/rapier3d";
 import Mallet from "./Mallet";
 import Arms from "./Arms";
 import { InteractionGroups } from "../constants/InteractionGroups";
@@ -29,7 +29,11 @@ export default class Player {
   private _moveRight = false;
   private _canJump = true;
   private height = 3; // player height
+  private radius = 0.5; // capsule radius
   private velocity = new THREE.Vector3();
+  private readonly iceGrip = 1.2; // how quickly input steers momentum on ice
+  private slideVelocity = new THREE.Vector3(); // world-space movement per frame
+  private onIce = false;
 
   constructor() {
     const experience = new Experience();
@@ -126,15 +130,30 @@ export default class Player {
       .applyQuaternion(this.camera.instance.quaternion)
       .multiplyScalar(this.velocity.length());
 
+    // Keep the last surface while airborne so a jump doesn't kill momentum
+    const ground = this.getGroundCollider();
+    if (ground) {
+      this.onIce = this.world?.water?.isIce(ground) ?? false;
+    }
+
+    if (this.onIce) {
+      // On ice momentum persists in world space and input only slowly steers it
+      this.slideVelocity.lerp(movement, 1 - Math.exp(-this.iceGrip * delta));
+    } else {
+      this.slideVelocity.copy(movement);
+    }
+
     this.characterController.computeColliderMovement(
       this.body.collider,
-      { x: movement.x, y: 0, z: movement.z }, // The collider we would like to move.
+      { x: this.slideVelocity.x, y: 0, z: this.slideVelocity.z }, // The collider we would like to move.
       undefined,
       this.body.collider.collisionGroups(),
     );
 
     // Read the result.
     let correctedMovement = this.characterController.computedMovement();
+    // Obstacles absorb the blocked part of the slide
+    this.slideVelocity.set(correctedMovement.x, 0, correctedMovement.z);
 
     const prevPosition = new THREE.Vector3().copy(
       this.body.rigidBody.translation(),
@@ -186,7 +205,7 @@ export default class Player {
       }),
     );
     this.body = new PhysicalEntity({
-      shape: { type: "capsule", radius: 0.5, height: this.height },
+      shape: { type: "capsule", radius: this.radius, height: this.height },
       density: 100,
       rigidBodyType: "dynamic",
       collisionGroups: InteractionGroups.PLAYER,
@@ -200,23 +219,27 @@ export default class Player {
   }
 
   private detectGround(): void {
+    // Ignore the first frames of a jump, when the feet are still near the ground
+    const isRising = this.body.rigidBody.linvel().y > 0.1;
+
+    if (!isRising && this.getGroundCollider()) {
+      this._canJump = true;
+    }
+  }
+
+  private getGroundCollider(): Collider | null {
     const hit = this.physicalWorld.castRay(
       this.body.rigidBody.translation(),
-      {
-        x: 0.0,
-        y: -this.height / 2 - 0.01,
-        z: 0.0,
-      },
-      1,
+      { x: 0, y: -1, z: 0 },
+      this.height / 2 + this.radius + 0.2,
       true,
       undefined,
-      undefined,
+      // Only surfaces the player can stand on, not the held weapon
+      InteractionGroups.PLAYER,
       this.body.collider,
     );
 
-    if (hit?.collider) {
-      this._canJump = true;
-    }
+    return hit?.collider ?? null;
   }
 
   throwObject(): void {

@@ -27,6 +27,7 @@ export class WinterTheme implements Theme {
       Textures.SnowFloorRoughness,
       Textures.SnowFloorAO,
     ]);
+    this.world?.water?.setFrozen(true);
     this.environment?.toggleSnow(true);
     this.environment?.setTimeOfDay("morning");
     this.playAmbientSound();
@@ -34,6 +35,7 @@ export class WinterTheme implements Theme {
   }
 
   discard(): void {
+    this.world?.water?.setFrozen(false);
     this.environment?.toggleSnow(false);
     this.stopAmbientSound();
     document.removeEventListener("click", this.playAmbientSound);
